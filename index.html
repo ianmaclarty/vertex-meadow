@@ -10,7 +10,11 @@
 <div id="outer">
 <h1>Vertex Meadow</h1>
 
-<a href="player.html">MAKE A THING</a>
+<p>
+<a href="player.html">MAKE A WORLD</a> (Chrome or Firefox recommended)
+</p>
+
+<h2>About</h2>
 
 <p>
 Vertex Meadow is a tool that renders 2D images as 3D textured heightmaps.
@@ -26,7 +30,7 @@ You can also chain together multiple levels by creating triggers
 in your level that cause the player's browser to jump to a URL of your choice.
 </p>
 
-<h2>Examples</h2>
+<h2>Examples (click image to run)</h2>
 
 <table>
     <tr>
@@ -68,18 +72,29 @@ in your level that cause the player's browser to jump to a URL of your choice.
 <li>Some views change colour and some change height</li>
 <li>Some views affect the ground and some affect the sky</li>
 <li>Some views affect terrain and some affect detailing</li>
-<li>Height = Alpha</li>
-<li>Hold H and move your mouse left and right to change height</li>
+<li>Alpha = Height</li>
+<li>While in edit mode hold H and move your mouse left and right to change brush height</li>
 <li>Hold N or M and move your mouse left and right to change height curve</li>
 <li>Hold Z, X, Y or R and move your mouse to change brush orientation</li>
 <li>Press L to place a link</li>
 <li>If you walk off the edge of the map, press J to go back to the start position</li>
 <li>If the app looses mouse capture, press E to exit edit mode (so you don't accidentally draw) and the click to regain capture</li>
+<li>The blend modes are:<ul>
+    <li>+: additive (increases height, makes colours brighter)</li>
+    <li>-: subtractive (subtracts height, makes colours darker)</li>
+    <li>a: alpha blending (good for colour views)</li>
+    <li>=: no blending (good for setting exact height)</li>
+    <li>*: multiplicative (use to reduce height while preserving shape)</li>
+    </ul>
+</li>
+<li>Set the flow to zero if you want to stamp once with each click</li>
+<li>You can create custom brushes by pressing C. This will replace the current brush with whatever is under the cursor.</li>
+<li>Click "share" to generate a unique URL for your creation that you can share with others</li>
 </ul>
 
 <p>
 If you have feedback, find a bug or make something nice, please let me know
-by email: ian -at- ianmaclarty.com or on twitter: <a href="https://twitter.com/muclorty">@muclorty</a>.
+by email: ian -at- ianmaclarty.com or via twitter: <a href="https://twitter.com/muclorty">@muclorty</a>.
 </p>
 
 </div>

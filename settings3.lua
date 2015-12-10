@@ -1,0 +1,17 @@
+return {
+    floor_heightmap_scale = 0.0005,
+    ceiling_heightmap_scale = 0.0005,
+    floor_detail_scale = 0.005,
+    ceiling_detail_scale = 0.005,
+    filter = "nearest",
+    floor_y_scale = 70.0,
+    ceiling_y_scale = 70.0,
+    floor_y_offset = -70.0,
+    ceiling_y_offset = -70.0,
+    fog_color = vec3(0),
+    fog_dist = 100,
+    detail_height = 0.1,
+    ambient = vec3(1),
+    diffuse = vec3(0),
+    start_pos = vec2(0.66, 0.175),
+}

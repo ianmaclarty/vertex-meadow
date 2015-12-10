@@ -1,0 +1,2 @@
+#!/bin/sh
+ampack -lua sprites.lua -png sprites.png brushes/*.png

@@ -5,6 +5,8 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title id="title">Vertex Meadow Exporter</title>
     <script src="jquery-2.1.3.min.js" type="text/javascript"></script>
+    <script src="jszip.min.js" type="text/javascript"></script>
+    <script src="FileSaver.js" type="text/javascript"></script>
   </head>
   <body>
     <h1>Vertex Meadow Exporter</h1>
@@ -23,116 +25,162 @@
     For example if your URL is http://www.vertexmeadow.xyz/player.html?l=ca1ff7d54db0480c7818
     then you'd paste ca1ff7d54db0480c7818 into the box below.
     </p>
+
+    <p>
+    Then click the Export button and a zip of your level will be generated and downloaded
+    (this may take a little while depending on your internet connection speed).
+    </p>
     
+    <h2>Export form:</h2>
+    <label>Share ID:</label><input id="gistid" type="text" width="40"></input>
+    <br>
+    <button id="export_button">Export</button>
+    <br>
+    <div id="status"></div>
+    <br>
+
+    <h2>More info</h2>
     <p>
-    Then click the Export button and wait for the files to export (this may take a little while
-    depending on your internet connection speed).
-    They will appear as links below. There should be 9 files:
-    <ul>
-        <li>floor.png</li>
-        <li>floor_detail.png</li>
-        <li>ceiling.png</li>
-        <li>ceiling_detail.png</li>
-        <li>settings.lua</li>
-        <li>amulet.js</li>
-        <li>data.pak</li>
-        <li>player.html</li>
-        <li>jquery-2.1.3.min.js</li>
-    </ul>
-    </p>
-    <p>
-    Once the links have appeared click them to download the files.
-    </p>
-    <p>
-    Note that the height map is stored in the alpha channel, so the images might look
+    The zip contains an index.html page and some other files. The data.pak file is also a zip
+    archive and it contains the exported pngs of your level. It also contains some lua files
+    which you might want to play with if you're feeling adventurous.
+    Note that the height map is stored in the alpha channel of the pngs, so the images might look
     a bit faded, or even completely transparent, if you open them in an image program.
     </p>
-    <p>
-    Once all the files are downloaded, rename the file data.pak to data.zip and
-    replace the files floor.png, floor_detail.png, ceiling.png,
-    ceiling_detail.png and settings.lua in the zip with the ones you downloaded.
-    Then rename it back to data.pak.
-    Make sure your zip program doesn't put the files into a directory
-    in the zip archive. All the files should be at the top level of the
-    zip archive.
-    Also make sure your zip program doesn't add any encryption.
-    </p>
-    <p>
-    Now upload your new data.pak along with amulet.js, player.html and jquery-2.1.3.min.js
-    to your own web site, or itch.io or whatever. The URL for your game should point
-    to player.html with no parameters. You can rename this file to index.html if you like.
-    </p>
 
     <p>
-    Feel free to do whatever you like with your creation, including selling it.
-    The code in amulet.js is from another engine I wrote called Amulet.
-    You can find the source code for Amulet here: <a href="http://www.amulet.xyz">http://www.amulet.xyz</a>.
-    </p>
-
-    <p>
-    Note that this export method requires the files be accessed from a web server. They won't
-    work if you just open player.html from your local file system. For a completely offline
-    build, a native build of Amulet will be made available at <a href="http://www.amulet.xyz">
+    Note also that this export method requires the files be accessed from a web server. They won't
+    work if you just open index.html from your local file system. For a completely offline
+    build, a native build of Amulet (the engine Vertex Meadow runs on) 
+    will be made available at <a href="http://www.amulet.xyz">
     http://www.amulet.xyz</a>. This will work with the same data files, but will be a native
     app that will run on Windows, Mac or Linux. I expect native builds to be available by the end of 2015.
     Poke me on <a href="https://twitter.com/muclorty">twitter</a> if they're not.
     </p>
 
-    <h2>Export:</h2>
-    <label>Share ID:</label><input id="gistid" type="text" width="40"></input>
-    <br>
-    <button id="export_button">Export</button>
-    <br>
-    <div id="downloads"></div>
+    <p>
+    Feel free to do whatever you like with your creation, including selling it.
+    </p>
+
     <script type='text/javascript'>
 
-function load_image(name, res) {
-    var filename64 = name + ".png64";
-    var filename = name + ".png";
-    function append_link(data) {
-        $("#downloads").append('<a href="data:image/png;base64,' + data + '" download="' + filename + '">' + filename + '</a><br>');
-    }
-    if (res.files[filename64].truncated) {
-        $.get(res.files[filename64].raw_url, function(data) {
-            append_link(data);
+function load_arraybuffer(url, cb) {
+    var oReq = new XMLHttpRequest();
+    oReq.open("GET", url, true);
+    oReq.responseType = "arraybuffer";
+    oReq.send();
+
+    oReq.onload = function(oEvent) {
+      var arrayBuffer = oReq.response;
+      cb(arrayBuffer);
+    };
+}
+
+function load_text(url, cb) {
+    var oReq = new XMLHttpRequest();
+    oReq.open("GET", url, true);
+    oReq.responseType = "text";
+    oReq.send();
+
+    oReq.onload = function(oEvent) {
+      var txt = oReq.responseText;
+      cb(txt);
+    };
+}
+
+function all_loaded(files) {
+    return files["data.pak"] &&
+        files["floor.png64"] &&
+        files["floor_detail.png64"] &&
+        files["ceiling.png64"] &&
+        files["ceiling_detail.png64"] &&
+        files["settings.lua"] &&
+        files["amulet.js"] &&
+        files["player.html"] &&
+        files["jquery-2.1.3.min.js"];
+}
+
+function load_gist_file(filename, res, files, on_all_loaded) {
+    if (res.files[filename].truncated) {
+        load_text(res.files[filename].raw_url, function(txt) {
+            console.log("loaded " + filename);
+            files[filename] = txt;
+            if (all_loaded(files)) {
+                on_all_loaded(files);
+            }
         });
     } else {
-        append_link(res.files[filename64].content);
+        console.log("loaded " + filename);
+        files[filename] = res.files[filename].content;
+        if (all_loaded(files)) {
+            on_all_loaded(files);
+        }
     }
 }
 
-function load_settings(res) {
-    var filename = "settings.lua"
-    $("#downloads").append('<a href="' + res.files[filename].raw_url + '" download="' + filename + '">' + filename + '</a><br>');
+function load_git_text_file(file, files, on_all_loaded) {
+    var url = "https://raw.githubusercontent.com/ianmaclarty/vertex-meadow/gh-pages/" + file;
+    load_text(url, function(txt) {
+        console.log("loaded " + file);
+        files[file] = txt;
+        if (all_loaded(files)) {
+            on_all_loaded(files);
+        }
+    });
 }
 
-function load_gitfile(file) {
+function load_git_bin_file(file, files, on_all_loaded) {
     var url = "https://raw.githubusercontent.com/ianmaclarty/vertex-meadow/gh-pages/" + file;
-    $("#downloads").append('<a href="' + url + '" download="' + file + '">' + file + '</a><br>');
+    load_arraybuffer(url, function(ab) {
+        console.log("loaded " + file);
+        files[file] = ab;
+        if (all_loaded(files)) {
+            on_all_loaded(files);
+        }
+    });
 }
 
 function load_gist(id) {
     console.log("loading gist " + id);
     var url = 'https://api.github.com/gists/'+id;
-    $.get(url, function(data) {
-        console.log("received gist");
-        var res = JSON.parse(data);
-        $("#downloads").empty();
-        load_image("floor", res);
-        load_image("floor_detail", res);
-        load_image("ceiling", res);
-        load_image("ceiling_detail", res);
-        load_settings(res);
-        load_gitfile("amulet.js");
-        load_gitfile("data.pak");
-        load_gitfile("player.html");
-        load_gitfile("jquery-2.1.3.min.js");
-    }, "text").fail(function() {
-        alert('failed to load level with id: ' + id)
+    var files = {};
+    function create_export(files) {
+        console.log("creating export...");
+
+        var data_zip = new JSZip();
+        data_zip.load(files["data.pak"]);
+        data_zip.file("floor.png", files["floor.png64"], {base64: true});
+        data_zip.file("floor_detail.png", files["floor_detail.png64"], {base64: true});
+        data_zip.file("ceiling.png", files["ceiling.png64"], {base64: true});
+        data_zip.file("ceiling_detail.png", files["ceiling_detail.png64"], {base64: true});
+        data_zip.file("settings.lua", files["settings.lua"]);
+        var data_base64 = data_zip.generate({});
+
+        var download_zip = new JSZip();
+        download_zip.file("data.pak", data_base64, {base64: true});
+        download_zip.file("amulet.js", files["amulet.js"]);
+        download_zip.file("index.html", files["player.html"]);
+        download_zip.file("jquery-2.1.3.min.js", files["jquery-2.1.3.min.js"]);
+        var content = download_zip.generate({type:"blob"});
+        saveAs(content, "vertex_meadow_level.zip");
+        $("#status").text("done");
+    }
+    load_text(url, function(txt) {
+        var res = JSON.parse(txt);
+        load_gist_file("floor.png64", res, files, create_export);
+        load_gist_file("floor_detail.png64", res, files, create_export);
+        load_gist_file("ceiling.png64", res, files, create_export);
+        load_gist_file("ceiling_detail.png64", res, files, create_export);
+        load_gist_file("settings.lua", res, files, create_export);
+        load_git_text_file("amulet.js", files, create_export);
+        load_git_text_file("player.html", files, create_export);
+        load_git_text_file("jquery-2.1.3.min.js", files, create_export);
+        load_git_bin_file("data.pak", files, create_export);
     });
 }
 
 $("#export_button").click(function() {
+    $("#status").text("exporting... please wait");
     load_gist($("#gistid").val());
 });
 

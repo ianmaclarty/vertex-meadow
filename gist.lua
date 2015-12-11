@@ -2,6 +2,7 @@ local gist = {}
 
 local win = require "window"
 local title = require "title"
+local focus = require "focus"
 
 local
 function do_share(old_scene, old_bg, floor, ceiling, floor_detail, ceiling_detail, terrain_state)
@@ -63,11 +64,13 @@ function do_share(old_scene, old_bg, floor, ceiling, floor_detail, ceiling_detai
             am.eval_js("prompt('Share successful! The URL is:', location.origin+location.pathname+'?l=' + '"..res.id.."');")
             win.scene = old_scene
             win.clear_color = old_bg
+            focus.regain("Share successful")
             return true
         elseif http.status == "error" then
             am.eval_js("alert('Sorry, but an error occured while sharing your level (error code: ' + "..http.code.." + ').');")
             win.scene = old_scene
             win.clear_color = old_bg
+            focus.regain("Share failed")
             return true
         end
         if win:key_pressed"escape" then

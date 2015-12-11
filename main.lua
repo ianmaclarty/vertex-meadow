@@ -7,6 +7,7 @@ local gist = require "gist"
 local save = require "save"
 local help = require "help"
 local title = require "title"
+local focus = require "focus"
 
 local
 function start(floor, floor_detail, ceiling, ceiling_detail, settings)
@@ -38,6 +39,8 @@ function start(floor, floor_detail, ceiling, ceiling_detail, settings)
         left = 200,
         bottom = bot,
     }
+
+    local link_threshold = 0.03
 
     local
     function update_layout(t)
@@ -141,21 +144,42 @@ function start(floor, floor_detail, ceiling, ceiling_detail, settings)
         ed:update_arrow(terrain_state.pos_abs, terrain_state.facing)
         if not edit_mode then
             if win:key_pressed"l" then
-                local caption = am.eval_js("prompt('Enter link caption. (Press enter to...)');")
-                if not caption or caption == "" then
-                    caption = "follow link"
-                end
-                local url = am.eval_js("prompt('Enter link URL:');")
-                if url and url ~= "" then
-                    table.insert(terrain_state.settings.links, {
-                        caption = caption,
-                        url = url,
-                        pos = terrain_state.pos,
-                    })
+                local caption = am.eval_js("prompt('Enter link caption (the displayed message will be: \"Press enter to <your caption>\")');")
+                if caption then
+                    if caption == "" then
+                        caption = "follow link"
+                    end
+                    local url = am.eval_js("prompt('Enter link URL (including http://):');")
+                    if url and url ~= "" then
+                        local new_link = {
+                            caption = caption,
+                            url = url,
+                            pos = terrain_state.pos,
+                        }
+                        local replaced_link = false
+                        for i, link in ipairs(settings.links) do
+                            if math.distance(terrain_state.pos, link.pos) < link_threshold then
+                                messages:remove(link.node)
+                                link.node = nil
+                                settings.links[i] = new_link
+                                replaced_link = true
+                                break
+                            end
+                        end
+                        if not replaced_link then
+                            table.insert(settings.links, new_link)
+                        end
+                        ed.editor_state.modified = true
+                        focus.regain("Link trigger created")
+                    else
+                        focus.regain("Link trigger not created")
+                    end
+                else
+                    focus.regain("Link trigger not created")
                 end
             end
             for i, link in ipairs(settings.links) do
-                if math.distance(terrain_state.pos, link.pos) < 0.03 then
+                if math.distance(terrain_state.pos, link.pos) < link_threshold then
                     if not link.node then
                         local txt = am.text("Press enter to "..link.caption, vec4(0, 0, 0, 1), "center", "center")
                         local w, h = txt.width, txt.height
@@ -167,13 +191,17 @@ function start(floor, floor_detail, ceiling, ceiling_detail, settings)
                         messages:append(link.node)
                     end
                     if win:key_pressed"enter" then
-                        am.eval_js("window.location = '"..link.url.."';")
-                        log("followed link to "..link.url)
+                        if not ed.editor_state.modified
+                            or am.eval_js("confirm('You have unsaved changes, are you sure you want to leave this page? (all unsaved changes will be lost)');")
+                        then
+                            am.eval_js("window.location = '"..link.url.."';")
+                        end
                     end
                     if win:key_pressed"u" then
                         messages:remove(link.node)
                         link.node = nil
                         table.remove(settings.links, i)
+                        ed.editor_state.modified = true
                     end
                     break;
                 else

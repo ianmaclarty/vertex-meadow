@@ -6,6 +6,7 @@ local mouse = require "mouse"
 local gist = require "gist"
 local save = require "save"
 local help = require "help"
+local focus = require "focus"
 
 local label_w = 64
 local val_w = 32
@@ -410,43 +411,53 @@ function create_controls(editor_state, terrain_state)
         editor_state.tmp_texture.magfilter = filter
         terrain_state.settings.filter = filter
         terrain_state:update_settings(terrain_state.settings)
+        editor_state.modified = true
     end, 1)
 
     local fog_color_picker = create_color_picker("FOG:", 400, ys[1], function(val)
         terrain_state.settings.fog_color = val
         terrain_state:update_settings(terrain_state.settings)
+        editor_state.modified = true
     end, terrain_state.settings.fog_color.rgb)
     local fog_dist_slider = create_slider("FOG Z:", 400, ys[2], sprites.height_slider, function(val)
         terrain_state.settings.fog_dist = val * 2000
         terrain_state:update_settings(terrain_state.settings)
+        editor_state.modified = true
     end, terrain_state.settings.fog_dist / 2000)
     local ambient_picker = create_color_picker("AMB:", 400, ys[3], function(val)
         terrain_state.settings.ambient = val
         terrain_state:update_settings(terrain_state.settings)
+        editor_state.modified = true
     end, terrain_state.settings.ambient)
     local diffuse_picker = create_color_picker("DIFF:", 400, ys[4], function(val)
         terrain_state.settings.diffuse = val
         terrain_state:update_settings(terrain_state.settings)
+        editor_state.modified = true
     end, terrain_state.settings.diffuse)
     local specular_picker = create_color_picker("SPEC:", 400, ys[5], function(val)
         terrain_state.settings.specular = val
         terrain_state:update_settings(terrain_state.settings)
+        editor_state.modified = true
     end, terrain_state.settings.specular)
     local shininess_slider = create_slider("SHINE:", 400, ys[6], sprites.height_slider, function(val)
         terrain_state.settings.shininess = (val ^ 3) * 200
         terrain_state:update_settings(terrain_state.settings)
+        editor_state.modified = true
     end, 0)
     local speed_slider = create_slider("SPEED:", 400, ys[7], sprites.flow_slider, function(val)
         terrain_state.settings.walk_speed = val * 100 + 10
         terrain_state:update_settings(terrain_state.settings)
+        editor_state.modified = true
     end, 0.5)
 
     local wireframe_checkbox = create_checkbox("WIRE/F:", 740, ys[1], function(val)
         terrain_state.settings.wireframe = val
         terrain_state:update_settings(terrain_state.settings)
+        editor_state.modified = true
     end)
     local noclip_checkbox = create_checkbox("NOCLIP:", 850, ys[1], function(val)
         terrain_state.noclip = val
+        editor_state.modified = true
     end)
     local mesh_nodes = {
         am.sprite(sprites.mesh_low),
@@ -465,27 +476,32 @@ function create_controls(editor_state, terrain_state)
             terrain_state.settings.depth = 600
         end
         terrain_state:update_settings(terrain_state.settings)
+        editor_state.modified = true
     end, 3)
 
     local detail_height_slider = create_slider("DTL Y:", 740, ys[3], sprites.med_slider, function(val)
         terrain_state.settings.detail_height = val * 0.2 + 0.005
         terrain_state:update_settings(terrain_state.settings)
+        editor_state.modified = true
     end, 0)
     local detail_scale_slider = create_slider("DTL XZ:", 740, ys[4], sprites.med_slider, function(val)
         local s = (val ^ 2) * 0.1 + 0.0005
         terrain_state.settings.floor_detail_scale = s
         terrain_state.settings.ceiling_detail_scale = s
         terrain_state:update_settings(terrain_state.settings)
+        editor_state.modified = true
     end, 0)
     local ceiling_y_slider = create_slider("SKY Y:", 740, ys[5], sprites.med_slider, function(val)
         terrain_state.settings.ceiling_y_offset = (val ^ 2 * 1000) - 100
         terrain_state:update_settings(terrain_state.settings)
+        editor_state.modified = true
     end, 0)
     local y_scale_slider = create_slider("VSCALE:", 740, ys[6], sprites.med_slider, function(val)
         local s = (val ^ 2) * 500 + 50
         terrain_state.settings.floor_y_scale = s
         terrain_state.settings.ceiling_y_scale = s
         terrain_state:update_settings(terrain_state.settings)
+        editor_state.modified = true
     end, 0)
 
     local title_button = create_button("TITLE", 660, ys[7], function()
@@ -497,7 +513,11 @@ function create_controls(editor_state, terrain_state)
                 title = nil
             end
             terrain_state.settings.title = title
+            focus.regain("Title updated")
+        else
+            focus.regain("Title not updated")
         end
+        editor_state.modified = true
     end)
     local share_button = create_button("SHARE", 740, ys[7], function()
         gist.share(
@@ -516,6 +536,7 @@ function create_controls(editor_state, terrain_state)
             editor_state.views.ceiling_detail,
             terrain_state
         )
+        editor_state.modified = false
     end)
     local help_button = create_button("HELP", 900, ys[7], function()
         help.show()
@@ -588,6 +609,7 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, terrain_sta
         zoom = 1,
         edit_mode = false,
         brush_fb = am.framebuffer(sprites.texture),
+        modified = false,
     }
     local brush_size = vec2(0.0005)
     local brush_angle = 0
@@ -824,10 +846,12 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, terrain_sta
                             editor_state.views[editor_state.curr_view].fb:render(draw_brush)
                             flow_accum = flow_accum - 1 / editor_state.flow
                         end
+                        editor_state.modified = true
                     end
                 else
                     if win:mouse_pressed"left" then
                         editor_state.views[editor_state.curr_view].fb:render(draw_brush)
+                        editor_state.modified = true
                     end
                 end
             end
@@ -873,5 +897,6 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, terrain_sta
         terrain_state:update_settings(terrain_state.settings)
         editor_state.edit_mode = edit_mode
     end
+    node.editor_state = editor_state
     return node
 end

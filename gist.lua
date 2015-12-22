@@ -42,6 +42,7 @@ function do_share(old_scene, old_bg, floor, ceiling, floor_detail, ceiling_detai
         walk_speed = terrain_state.settings.walk_speed,
         title = terrain_state.settings.title,
         wireframe = terrain_state.settings.wireframe,
+        noclip = terrain_state.settings.noclip,
         links = links,
     }
     local req = {

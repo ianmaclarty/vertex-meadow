@@ -429,6 +429,7 @@ function terrain.create(in_settings)
         settings.filter = settings.filter or "linear"
         settings.walk_speed = settings.walk_speed or 60
         settings.wireframe = settings.wireframe or false
+        settings.noclip = settings.noclip or false
 
         floor_texture = settings.floor_texture
         floor_detail = settings.floor_detail_texture
@@ -534,6 +535,8 @@ function terrain.create(in_settings)
 
         walk_speed = settings.walk_speed
         strafe_speed = walk_speed
+
+        state.noclip = settings.noclip
 
         settings_updated = true
     end

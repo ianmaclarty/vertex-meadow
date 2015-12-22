@@ -40,6 +40,7 @@ function do_save(old_scene, old_bg, floor, ceiling, floor_detail, ceiling_detail
         walk_speed = terrain_state.settings.walk_speed,
         title = terrain_state.settings.title,
         wireframe = terrain_state.settings.wireframe,
+        noclip = terrain_state.settings.noclip,
         links = links,
     }
     local data = {
@@ -100,6 +101,7 @@ function save.load_save(start)
     local ceiling = extract_img"ceiling"
     local ceiling_detail = extract_img"ceiling_detail"
     local settings = assert(loadstring(data["settings.lua"]))()
+    log("settings.noclip = %s", tostring(settings.noclip))
     settings.floor_texture = floor.tex
     settings.ceiling_texture = ceiling.tex
     settings.floor_detail_texture = floor_detail.tex

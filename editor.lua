@@ -454,11 +454,13 @@ function create_controls(editor_state, terrain_state)
         terrain_state.settings.wireframe = val
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
-    end)
+    end, terrain_state.settings.wireframe)
     local noclip_checkbox = create_checkbox("NOCLIP:", 850, ys[1], function(val)
-        terrain_state.noclip = val
+        terrain_state.settings.noclip = val
+        terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
-    end)
+    end, terrain_state.settings.noclip)
+
     local mesh_nodes = {
         am.sprite(sprites.mesh_low),
         am.sprite(sprites.mesh_med),
@@ -711,8 +713,14 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, terrain_sta
     local prev_norm_pos = nil
     local norm_pos = nil
     local start_angle
-    local pos0 = nil
-    local mouse_start_pos = nil
+    local rot_pos0 = nil
+    local x_pos0 = nil
+    local y_pos0 = nil
+    local z_pos0 = nil
+    local rot_mouse_start_pos = nil
+    local x_mouse_start_pos = nil
+    local y_mouse_start_pos = nil
+    local z_mouse_start_pos = nil
     local start_size = nil
     local start_alpha = nil
 
@@ -723,73 +731,73 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, terrain_sta
         norm_pos = normalize_pos(pos, editor_bounds)
         if win:key_down"r" then
             if win:key_pressed"r" then
-                pos0 = norm_pos
-                mouse_start_pos = mouse.pixel_position
+                rot_pos0 = norm_pos
+                rot_mouse_start_pos = mouse.pixel_position
                 mouse.set_visible(false)
                 start_angle = brush_angle
                 mouse.clamp = false
             end
-            local angle_change = norm_pos.x - pos0.x
+            local angle_change = norm_pos.x - rot_pos0.x
             brush_angle = start_angle - angle_change
             draw_brush"brush_rotate".angle = brush_angle
         elseif win:key_released"r" then
-            if pos0 then
-                mouse.set_position(mouse_start_pos)
-                pos0 = nil
+            if rot_pos0 then
+                mouse.set_position(rot_mouse_start_pos)
+                rot_pos0 = nil
                 mouse.set_visible(true)
                 mouse.clamp = true
             end
         end
         if win:key_down"x" then
             if win:key_pressed"x" then
-                pos0 = norm_pos
-                mouse_start_pos = mouse.pixel_position
+                x_pos0 = norm_pos
+                x_mouse_start_pos = mouse.pixel_position
                 mouse.set_visible(false)
                 start_size = brush_size
                 mouse.clamp = false
             end
-            brush_size = brush_size{x = start_size.x + 0.005 * (norm_pos.x - pos0.x)}
+            brush_size = brush_size{x = start_size.x + 0.005 * (norm_pos.x - x_pos0.x)}
             draw_brush"brush_size".scale2d = brush_size
         elseif win:key_released"x" then
-            if pos0 then
-                mouse.set_position(mouse_start_pos)
-                pos0 = nil
+            if x_pos0 then
+                mouse.set_position(x_mouse_start_pos)
+                x_pos0 = nil
                 mouse.set_visible(true)
                 mouse.clamp = true
             end
         end
         if win:key_down"y" then
             if win:key_pressed"y" then
-                pos0 = norm_pos
-                mouse_start_pos = mouse.pixel_position
+                y_pos0 = norm_pos
+                y_mouse_start_pos = mouse.pixel_position
                 mouse.set_visible(false)
                 start_size = brush_size
                 mouse.clamp = false
             end
-            brush_size = brush_size{y = start_size.y + 0.005 * (norm_pos.x - pos0.x)}
+            brush_size = brush_size{y = start_size.y + 0.005 * (norm_pos.x - y_pos0.x)}
             draw_brush"brush_size".scale2d = brush_size
         elseif win:key_released"y" then
-            if pos0 then
-                mouse.set_position(mouse_start_pos)
-                pos0 = nil
+            if y_pos0 then
+                mouse.set_position(y_mouse_start_pos)
+                y_pos0 = nil
                 mouse.set_visible(true)
                 mouse.clamp = true
             end
         end
         if win:key_down"z" then
             if win:key_pressed"z" then
-                pos0 = norm_pos
-                mouse_start_pos = mouse.pixel_position
+                z_pos0 = norm_pos
+                z_mouse_start_pos = mouse.pixel_position
                 mouse.set_visible(false)
                 start_size = brush_size
                 mouse.clamp = false
             end
-            brush_size = start_size + vec2(0.005 * (norm_pos.x - pos0.x), 0.005 * (norm_pos.x - pos0.x) * (start_size.y / start_size.x))
+            brush_size = start_size + vec2(0.005 * (norm_pos.x - z_pos0.x), 0.005 * (norm_pos.x - z_pos0.x) * (start_size.y / start_size.x))
             draw_brush"brush_size".scale2d = brush_size
         elseif win:key_released"z" then
-            if pos0 then
-                mouse.set_position(mouse_start_pos)
-                pos0 = nil
+            if z_pos0 then
+                mouse.set_position(z_mouse_start_pos)
+                z_pos0 = nil
                 mouse.set_visible(true)
                 mouse.clamp = true
             end

@@ -211,6 +211,10 @@ function start(floor, floor_detail, ceiling, ceiling_detail, settings)
                     end
                 end
             end
+            if win:key_pressed"i" then
+                settings.start_pos = terrain_state.pos
+                terrain_state:update_settings(settings)
+            end
         end
     end)
 

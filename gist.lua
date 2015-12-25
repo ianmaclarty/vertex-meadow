@@ -62,7 +62,7 @@ function do_share(old_scene, old_bg, floor, ceiling, floor_detail, ceiling_detai
     win.scene:action(function()
         if http.status == "success" then
             local res = am.parse_json(http.response)
-            am.eval_js("prompt('Share successful! The URL is:', location.origin+location.pathname+'?l=' + '"..res.id.."');")
+            am.eval_js("prompt('Share successful! The URL is:', 'http://www.vertexmeadow.xyz/player.html?l=' + '"..res.id.."');")
             win.scene = old_scene
             win.clear_color = old_bg
             focus.regain("Share successful")

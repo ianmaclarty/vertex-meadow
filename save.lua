@@ -101,7 +101,6 @@ function save.load_save(start)
     local ceiling = extract_img"ceiling"
     local ceiling_detail = extract_img"ceiling_detail"
     local settings = assert(loadstring(data["settings.lua"]))()
-    log("settings.noclip = %s", tostring(settings.noclip))
     settings.floor_texture = floor.tex
     settings.ceiling_texture = ceiling.tex
     settings.floor_detail_texture = floor_detail.tex

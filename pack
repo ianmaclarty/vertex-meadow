@@ -1,2 +1,2 @@
 #!/bin/sh
-ampack -lua sprites.lua -png sprites.png brushes/*.png
+amulet pack -lua sprites.lua -png sprites.png brushes/*.png

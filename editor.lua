@@ -174,7 +174,7 @@ function create_checkbox(label, x_os, y, on_change, init_state)
             local pos = mouse.pixel_position
             if pos.x > x_start and pos.x < x_end and pos.y > y_bottom and pos.y < y_top then
                 curr_state = not curr_state
-                sprite.sprite = curr_state and sprites.checkbox_on or sprites.checkbox_off
+                sprite.source = curr_state and sprites.checkbox_on or sprites.checkbox_off
                 on_change(curr_state)
             end
         end
@@ -206,8 +206,8 @@ end
 
 local
 function create_slider(label, x_os, y, bg, on_change, init_val, show_val, shortcut)
-    local w = bg.w
-    local h = bg.h
+    local w = bg.width
+    local h = bg.height
     local curr_val = init_val or 0
     local lw = label and label_w or 0
     local vw = show_val and val_w or 0
@@ -283,7 +283,7 @@ local
 function create_color_picker(label, x_os, y, on_change, init_val)
     local group = am.group()
     group:append(am.translate(x_os, y) ^ am.text(label, "left"))
-    local h = sprites.red_slider.h
+    local h = sprites.red_slider.height
     local color = init_val or vec3(1)
     local block = am.rect(x_os + label_w, y-h*1.5, x_os + label_w + h*3, y + h*1.5, vec4(color, 1))
     local r_slider = create_slider(nil, x_os + label_w + h*3 + 5, y-h, sprites.red_slider, function(val)
@@ -366,7 +366,7 @@ function create_controls(editor_state, terrain_state)
     end
     local brush_select = create_select("BRUSH:", brush_nodes, 0, ys[2], 30, function(b)
         editor_state.curr_brush = b
-        editor_state.draw_brush"brush_sprite".sprite = sprites["brush"..editor_state.curr_brush]
+        editor_state.draw_brush"brush_sprite".source = sprites["brush"..editor_state.curr_brush]
     end, editor_state.curr_brush)
     local exp1_slider = create_slider("CURVE:", 0, ys[3], sprites.exp_slider, function(val)
         editor_state.draw_brush"bind".exp1 = 10 ^ (val * 2 - 1)
@@ -671,7 +671,7 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, terrain_sta
         ^ am.rotate(0)
         ^ am.scale(arrow_scale)
         ^ am.sprite(sprites.arrow)
-    local w = sprites.brush1.w/2
+    local w = sprites.brush1.width/2
     local cursor = 
         am.translate(0, 0)
         ^ am.rotate(brush_angle)
@@ -816,13 +816,13 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, terrain_sta
             local y1 = sprite.t1 * 2 - 1
             local x2 = sprite.s2 * 2 - 1
             local y2 = sprite.t2 * 2 - 1
-            local s1 = brush_size * sprite.w * 0.5
+            local s1 = brush_size * sprite.width * 0.5
             local os = -editor_node"translate".position2d + norm_pos / editor_node"bg""scale".scale.x
             local q = quat(brush_angle)
             local p1 = q * (vec2(-1, 1) * s1) + os
-            local p2 = q * (vec2(-1, -1)  * s1) + os
-            local p3 = q * (vec2(1, -1)  * s1) + os
-            local p4 = q * (vec2(1, 1)  * s1) + os
+            local p2 = q * (vec2(-1, -1) * s1) + os
+            local p3 = q * (vec2(1, -1) * s1) + os
+            local p4 = q * (vec2(1, 1) * s1) + os
             p1 = p1 * 0.5 + 0.5
             p2 = p2 * 0.5 + 0.5
             p3 = p3 * 0.5 + 0.5

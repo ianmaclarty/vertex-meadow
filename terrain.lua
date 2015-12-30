@@ -348,7 +348,7 @@ function terrain.create(in_settings)
         -- XXX why do we need minus forward here?
         local V = math.lookat(vec3(pos.x, 0, pos.y), vec3(pos.x - forward.x, 0, pos.y - forward.y), up)
         scene"bind".V = math.inverse(V)
-        local mouse_delta = win:mouse_delta_norm()
+        local mouse_delta = win:mouse_norm_delta()
         facing = facing - mouse_delta.x * pi
         pitch = math.clamp(pitch + mouse_delta.y, -0.80, 0.80)
         scene"pitch".rotation = quat(pitch, vec3(-1, 0, 0))

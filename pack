@@ -1,2 +1,2 @@
 #!/bin/sh
-amulet pack -lua sprites.lua -png sprites.png brushes/*.png
+amulet pack -lua sprites.lua -png sprites.png -keep-padding brushes/*.png

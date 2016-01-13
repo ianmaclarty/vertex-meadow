@@ -150,14 +150,9 @@ function gist.load_gist(id, start)
                         local base64 = data[file]
                         local buf = am.base64_decode(base64)
                         local img = am.decode_png(buf)
-                        local tex = am.texture2d{
-                            image = img,
-                            swrap = "mirrored_repeat",
-                            twrap = "mirrored_repeat",
-                            format = "rgba",
-                            minfilter = "linear",
-                            magfilter = "linear",
-                        }
+                        local tex = am.texture2d(img)
+                        tex.wrap = "mirrored_repeat"
+                        tex.filter = "linear"
                         return {
                             tex = tex,
                             img = img,

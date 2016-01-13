@@ -17,14 +17,9 @@ function texture.read_texture(color_filename, filter)
     local depth_view = heightmap_image.buffer:view("ubyte", 0, 4)
     alpha_view:set(depth_view)
     ]]
-    local texture = am.texture2d{
-        image = color_image,
-        swrap = "mirrored_repeat",
-        twrap = "mirrored_repeat",
-        format = "rgba",
-        minfilter = filter,
-        magfilter = filter,
-    }
+    local texture = am.texture2d(color_image)
+    texture.wrap = "mirrored_repeat"
+    texture.filter = filter
     return {
         tex = texture,
         img = color_image,

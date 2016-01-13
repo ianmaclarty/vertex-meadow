@@ -101,7 +101,7 @@ local terrain_shader = am.program(terrain_vshader, terrain_fshader)
 
 local readback_buffer = am.buffer(4)
 local readback_view = readback_buffer:view("ubyte", 0, 1)
-local readback_texture = am.texture2d{width = 1, height = 1, buffer = readback_buffer}
+local readback_texture = am.texture2d(am.image_buffer(readback_buffer, 1))
 local readback_framebuffer = am.framebuffer(readback_texture)
 local readback_vshader = [[
     precision highp float;

@@ -50,7 +50,6 @@ function do_save(old_scene, old_bg, floor, ceiling, floor_detail, ceiling_detail
         ["ceiling_detail.png64"] = ceiling_detail_data,
         ["settings.lua"] = "return "..table.tostring(settings, 2),
     }
-    local json = am.to_json(data);
     am.eval_js("localStorage.setItem('vertex_meadow_save', JSON.stringify("..am.to_json(data).."));");
     win.scene = old_scene
     win.clear_color = old_bg
@@ -82,14 +81,9 @@ function save.load_save(start)
         local base64 = data[name..".png64"]
         local buf = am.base64_decode(base64)
         local img = am.decode_png(buf)
-        local tex = am.texture2d{
-            image = img,
-            swrap = "mirrored_repeat",
-            twrap = "mirrored_repeat",
-            format = "rgba",
-            minfilter = "linear",
-            magfilter = "linear",
-        }
+        local tex = am.texture2d(img)
+        tex.wrap = "mirrored_repeat"
+        tex.filter = "linear"
         return {
             tex = tex,
             img = img,

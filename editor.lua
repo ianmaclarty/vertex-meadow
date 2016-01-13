@@ -79,12 +79,12 @@ local draw_vshader = [[
     precision highp float;
     uniform mat4 P;
     uniform mat4 MV;
-    attribute vec3 vert;
+    attribute vec2 vert;
     attribute vec2 uv;
     varying vec2 v_uv;
     void main() {
         v_uv = uv;
-        gl_Position = P * MV * vec4(vert, 1.0);
+        gl_Position = P * MV * vec4(vert, 0.0, 1.0);
     }
 ]]
 
@@ -639,14 +639,9 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, terrain_sta
     draw_brush"brush_sprite""blend".mode = "premult"
     draw_brush"brush_sprite""use_program".program = draw_shader
     editor_state.draw_brush = draw_brush
-    local tmp_texture = am.texture2d{
-        width = floor.tex.width,
-        height = floor.tex.height,
-        swrap = "mirrored_repeat",
-        twrap = "mirrored_repeat",
-        minfilter = "linear",
-        magfilter = "linear",
-    }
+    local tmp_texture = am.texture2d(floor.tex.width, floor.tex.height)
+    tmp_texture.wrap = "mirrored_repeat"
+    tmp_texture.filter = "linear"
     editor_state.tmp_texture = tmp_texture
     local tmp_fb = am.framebuffer(tmp_texture)
     local tmp_scene = 

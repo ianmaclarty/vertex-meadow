@@ -506,7 +506,10 @@ function create_controls(editor_state, terrain_state)
         editor_state.modified = true
     end, 0)
 
-    local title_button = create_button("TITLE", 660, ys[7], function()
+    local upload = create_button("UPLOAD", 620, ys[7], function()
+        local img = upload.get_image()
+    end)
+    local title_button = create_button("TITLE", 700, ys[7], function()
         local title = terrain_state.settings.title or ""
         title = title:gsub("%'", "")
         title = am.eval_js("prompt('Enter a title:', '"..title.."');")
@@ -521,7 +524,7 @@ function create_controls(editor_state, terrain_state)
         end
         editor_state.modified = true
     end)
-    local share_button = create_button("SHARE", 740, ys[7], function()
+    local share_button = create_button("SHARE", 780, ys[7], function()
         gist.share(
             editor_state.views.floor,
             editor_state.views.ceiling,
@@ -530,7 +533,7 @@ function create_controls(editor_state, terrain_state)
             terrain_state
         )
     end)
-    local save_button = create_button("SAVE", 820, ys[7], function()
+    local save_button = create_button("SAVE", 860, ys[7], function()
         save.save(
             editor_state.views.floor,
             editor_state.views.ceiling,
@@ -540,7 +543,7 @@ function create_controls(editor_state, terrain_state)
         )
         editor_state.modified = false
     end)
-    local help_button = create_button("HELP", 900, ys[7], function()
+    local help_button = create_button("HELP", 940, ys[7], function()
         help.show()
     end)
 

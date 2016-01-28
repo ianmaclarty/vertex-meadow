@@ -7,6 +7,7 @@ local gist = require "gist"
 local save = require "save"
 local help = require "help"
 local focus = require "focus"
+local download = require "download"
 local upload = require "upload"
 
 local label_w = 64
@@ -185,14 +186,14 @@ end
 
 local
 function create_button(label, x_os, y, on_press)
-    local h = 32
+    local h = 30
     local x_start = x_os
     local x_end = x_start + label_w
     local y_top = y + h / 2
     local y_bottom = y - h / 2
     local group = am.group{
         am.rect(x_start, y_bottom, x_end, y_top, vec4(0, 1, 1, 1)),
-        am.translate(x_os + (x_end - x_start)/2, y) ^ am.text(label, vec4(0, 0, 0, 1), "center", "center")
+        am.translate(x_os + (x_end - x_start)/2, y+3) ^ am.text(label, vec4(0, 0, 0, 1), "center", "center")
     }
     group:action(function()
         if win:mouse_pressed("left") then
@@ -417,48 +418,48 @@ function create_controls(editor_state, terrain_state)
         editor_state.modified = true
     end, 1)
 
-    local fog_color_picker = create_color_picker("FOG:", 400, ys[1], function(val)
+    local fog_color_picker = create_color_picker("FOG:", 480, ys[1], function(val)
         terrain_state.settings.fog_color = val
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, terrain_state.settings.fog_color.rgb)
-    local fog_dist_slider = create_slider("FOG Z:", 400, ys[2], sprites.height_slider, function(val)
+    local fog_dist_slider = create_slider("FOG Z:", 480, ys[2], sprites.height_slider, function(val)
         terrain_state.settings.fog_dist = val * 2000
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, terrain_state.settings.fog_dist / 2000)
-    local ambient_picker = create_color_picker("AMB:", 400, ys[3], function(val)
+    local ambient_picker = create_color_picker("AMB:", 480, ys[3], function(val)
         terrain_state.settings.ambient = val
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, terrain_state.settings.ambient)
-    local diffuse_picker = create_color_picker("DIFF:", 400, ys[4], function(val)
+    local diffuse_picker = create_color_picker("DIFF:", 480, ys[4], function(val)
         terrain_state.settings.diffuse = val
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, terrain_state.settings.diffuse)
-    local specular_picker = create_color_picker("SPEC:", 400, ys[5], function(val)
+    local specular_picker = create_color_picker("SPEC:", 480, ys[5], function(val)
         terrain_state.settings.specular = val
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, terrain_state.settings.specular)
-    local shininess_slider = create_slider("SHINE:", 400, ys[6], sprites.height_slider, function(val)
+    local shininess_slider = create_slider("SHINE:", 480, ys[6], sprites.height_slider, function(val)
         terrain_state.settings.shininess = (val ^ 3) * 200
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, 0)
-    local speed_slider = create_slider("SPEED:", 400, ys[7], sprites.flow_slider, function(val)
+    local speed_slider = create_slider("SPEED:", 480, ys[7], sprites.flow_slider, function(val)
         terrain_state.settings.walk_speed = val * 100 + 10
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, 0.5)
 
-    local wireframe_checkbox = create_checkbox("WIRE/F:", 740, ys[1], function(val)
+    local wireframe_checkbox = create_checkbox("WIRE/F:", 820, ys[1], function(val)
         terrain_state.settings.wireframe = val
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, terrain_state.settings.wireframe)
-    local noclip_checkbox = create_checkbox("NOCLIP:", 850, ys[1], function(val)
+    local noclip_checkbox = create_checkbox("NOCLIP:", 930, ys[1], function(val)
         terrain_state.settings.noclip = val
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
@@ -469,7 +470,7 @@ function create_controls(editor_state, terrain_state)
         am.sprite(sprites.mesh_med),
         am.sprite(sprites.mesh_high),
     }
-    local mesh_select = create_select("MESH:", mesh_nodes, 740, ys[2], 30, function(val)
+    local mesh_select = create_select("MESH:", mesh_nodes, 820, ys[2], 30, function(val)
         if val == 1 then
             terrain_state.settings.width = 100
             terrain_state.settings.depth = 100
@@ -484,24 +485,24 @@ function create_controls(editor_state, terrain_state)
         editor_state.modified = true
     end, 3)
 
-    local detail_height_slider = create_slider("DTL Y:", 740, ys[3], sprites.med_slider, function(val)
+    local detail_height_slider = create_slider("DTL Y:", 820, ys[3], sprites.med_slider, function(val)
         terrain_state.settings.detail_height = val * 0.2 + 0.005
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, 0)
-    local detail_scale_slider = create_slider("DTL XZ:", 740, ys[4], sprites.med_slider, function(val)
+    local detail_scale_slider = create_slider("DTL XZ:", 820, ys[4], sprites.med_slider, function(val)
         local s = (val ^ 2) * 0.1 + 0.0005
         terrain_state.settings.floor_detail_scale = s
         terrain_state.settings.ceiling_detail_scale = s
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, 0)
-    local ceiling_y_slider = create_slider("SKY Y:", 740, ys[5], sprites.med_slider, function(val)
+    local ceiling_y_slider = create_slider("SKY Y:", 820, ys[5], sprites.med_slider, function(val)
         terrain_state.settings.ceiling_y_offset = (val ^ 2 * 1000) - 100
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, 0)
-    local y_scale_slider = create_slider("VSCALE:", 740, ys[6], sprites.med_slider, function(val)
+    local y_scale_slider = create_slider("VSCALE:", 820, ys[6], sprites.med_slider, function(val)
         local s = (val ^ 2) * 500 + 50
         terrain_state.settings.floor_y_scale = s
         terrain_state.settings.ceiling_y_scale = s
@@ -509,8 +510,7 @@ function create_controls(editor_state, terrain_state)
         editor_state.modified = true
     end, 0)
 
-    local upload_button
-    upload_button = create_button("UPLOAD", 620, ys[7], function()
+    local upload_button = create_button("UPLOAD", 390, ys[1] - 2, function()
         win.lock_pointer = false
         local img = upload.start_image_upload()
         win.scene:action(function()
@@ -546,7 +546,39 @@ function create_controls(editor_state, terrain_state)
             end
         end)
     end)
-    local title_button = create_button("TITLE", 700, ys[7], function()
+
+    local download_button = create_button("DOWNLOAD", 390, ys[2] - 2, function()
+        local view = editor_state.views[editor_state.curr_view]
+        view.fb:read_back()
+        local dst = am.image_buffer(512)
+        local src = view.img
+        if editor_state.is_color_view then
+            local dr = dst.buffer:view("ubyte", 0, 4)
+            local sr = src.buffer:view("ubyte", 0, 4)
+            local dg = dst.buffer:view("ubyte", 1, 4)
+            local sg = src.buffer:view("ubyte", 1, 4)
+            local db = dst.buffer:view("ubyte", 2, 4)
+            local sb = src.buffer:view("ubyte", 2, 4)
+            local da = dst.buffer:view("ubyte", 3, 4)
+            dr:set(sr)
+            dg:set(sg)
+            db:set(sb)
+            da:set(255)
+        else
+            local dr = dst.buffer:view("ubyte", 0, 4)
+            local dg = dst.buffer:view("ubyte", 1, 4)
+            local db = dst.buffer:view("ubyte", 2, 4)
+            local da = dst.buffer:view("ubyte", 3, 4)
+            local sa = src.buffer:view("ubyte", 3, 4)
+            dr:set(sa)
+            dg:set(sa)
+            db:set(sa)
+            da:set(255)
+        end
+        download.download_image(dst)
+    end)
+
+    local title_button = create_button("TITLE", 720, ys[7], function()
         local title = terrain_state.settings.title or ""
         title = title:gsub("%'", "")
         title = am.eval_js("prompt('Enter a title:', '"..title.."');")
@@ -561,7 +593,7 @@ function create_controls(editor_state, terrain_state)
         end
         editor_state.modified = true
     end)
-    local share_button = create_button("SHARE", 780, ys[7], function()
+    local share_button = create_button("SHARE", 800, ys[7], function()
         gist.share(
             editor_state.views.floor,
             editor_state.views.ceiling,
@@ -570,7 +602,7 @@ function create_controls(editor_state, terrain_state)
             terrain_state
         )
     end)
-    local save_button = create_button("SAVE", 860, ys[7], function()
+    local save_button = create_button("SAVE", 880, ys[7], function()
         save.save(
             editor_state.views.floor,
             editor_state.views.ceiling,
@@ -580,7 +612,7 @@ function create_controls(editor_state, terrain_state)
         )
         editor_state.modified = false
     end)
-    local help_button = create_button("HELP", 940, ys[7], function()
+    local help_button = create_button("HELP", 960, ys[7], function()
         help.show()
     end)
 
@@ -616,6 +648,7 @@ function create_controls(editor_state, terrain_state)
     group:append(y_scale_slider)
 
     group:append(upload_button)
+    group:append(download_button)
     group:append(title_button)
     group:append(share_button)
     group:append(save_button)

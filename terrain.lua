@@ -139,18 +139,21 @@ function create_mesh(width, depth, near_clip, far_clip, fov)
         local t = j/depth
         t = t ^ 3.5
         local z = t * z_dist + near_clip
+        local z4 = 4 * z
+        local w2 = width/2
+        local nw2 = -w2
         for i = -width/2, width/2 do
             local x
-            if i == -width/2 then
+            if i == nw2 then
                 x = -10000
-            elseif i == width/2 then
+            elseif i == w2 then
                 x = 10000
             else
-                x = (i/(width/2)) * 4 * z
+                x = i / w2 * z4
             end
             verts[k] = x
             verts[k+1] = z
-            if j < depth and i < width/2 then
+            if j < depth and i < w2 then
                 indices[h+0] = l
                 indices[h+1] = l + width + 1
                 indices[h+2] = l + 1

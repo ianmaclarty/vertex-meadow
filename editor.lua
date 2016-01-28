@@ -7,6 +7,7 @@ local gist = require "gist"
 local save = require "save"
 local help = require "help"
 local focus = require "focus"
+local upload = require "upload"
 
 local label_w = 64
 local val_w = 32
@@ -351,6 +352,7 @@ function create_controls(editor_state, terrain_state)
             mask.blue = false
             mask.alpha = true
             capture_shader = alpha_only_shader
+            editor_state.is_color_view = false
         else
             editor_state.editor_node"use_program".program = color_shader
             mask.red = true
@@ -358,6 +360,7 @@ function create_controls(editor_state, terrain_state)
             mask.blue = true
             mask.alpha = false
             capture_shader = color_only_shader
+            editor_state.is_color_view = true
         end
     end, 1, {"1", "2", "3", "4", "5", "6", "7", "8"})
     local brush_nodes = {}
@@ -506,8 +509,42 @@ function create_controls(editor_state, terrain_state)
         editor_state.modified = true
     end, 0)
 
-    local upload = create_button("UPLOAD", 620, ys[7], function()
-        local img = upload.get_image()
+    local upload_button
+    upload_button = create_button("UPLOAD", 620, ys[7], function()
+        win.lock_pointer = false
+        local img = upload.start_image_upload()
+        win.scene:action(function()
+            local base64 = upload.image_upload_successful()
+            if base64 then
+                win.lock_pointer = true
+                local img
+                local ok = pcall(function() 
+                    img = am.decode_png(am.base64_decode(base64))
+                end)
+                if not ok or img.width ~= 512 or img.height ~= 512 then
+                    am.eval_js("alert('image must be a 512x512 png');");
+                    return true
+                end
+                local view = editor_state.views[editor_state.curr_view]
+                view.fb:read_back()
+                if editor_state.is_color_view then
+                    local dr = view.img.buffer:view("ubyte", 0, 4)
+                    local sr = img.buffer:view("ubyte", 0, 4)
+                    local dg = view.img.buffer:view("ubyte", 1, 4)
+                    local sg = img.buffer:view("ubyte", 1, 4)
+                    local db = view.img.buffer:view("ubyte", 2, 4)
+                    local sb = img.buffer:view("ubyte", 2, 4)
+                    dr:set(sr)
+                    dg:set(sg)
+                    db:set(sb)
+                else
+                    local dst = view.img.buffer:view("ubyte", 3, 4)
+                    local src = img.buffer:view("ubyte", 0, 4)
+                    dst:set(src)
+                end
+                return true
+            end
+        end)
     end)
     local title_button = create_button("TITLE", 700, ys[7], function()
         local title = terrain_state.settings.title or ""
@@ -578,6 +615,7 @@ function create_controls(editor_state, terrain_state)
     group:append(ceiling_y_slider)
     group:append(y_scale_slider)
 
+    group:append(upload_button)
     group:append(title_button)
     group:append(share_button)
     group:append(save_button)
@@ -609,6 +647,7 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, terrain_sta
             ceiling_detail = ceiling_detail,
         },
         curr_view = "floor",
+        is_color_view = false,
         curr_texture = "floor_texture",
         curr_brush = 4,
         zoom = 1,

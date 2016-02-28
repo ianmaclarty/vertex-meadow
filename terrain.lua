@@ -188,6 +188,7 @@ function terrain.create(in_settings)
     local ceiling_detail = in_settings.ceiling_detail_texture
     local floor_side_texture = in_settings.floor_side_texture
     local ceiling_side_texture = in_settings.ceiling_side_texture
+    local hands_texture = in_settings.hands_texture
 
     local width = 800
     local depth = 600
@@ -246,8 +247,7 @@ function terrain.create(in_settings)
         ^ mesh_node
 
     local scene = 
-        am.viewport(0, 0, 0, 0)
-        ^ am.use_program(terrain_shader)
+        am.use_program(terrain_shader)
         ^ am.bind{
             V = mat4(1),
             fog_color = fog_color,
@@ -268,6 +268,19 @@ function terrain.create(in_settings)
             floor_node,
             ceiling_node,
         }
+
+    local hand_node = am.use_program(am.shaders.texture2d)
+        ^ am.blend"alpha"
+        ^ am.bind{
+            MV = mat4(1),
+            P = mat4(1),
+            tex = hands_texture,
+            vert = am.rect_verts_2d(-1, -1, 1, 1),
+            uv = am.rect_verts_2d(0, 0, 1, 1),
+        }
+        ^ am.draw("triangles", am.rect_indices())
+
+    local top_node = am.viewport(0, 0, 0, 0) ^ {scene, hand_node}
 
     local uv_readback_node = 
         am.bind{
@@ -296,7 +309,7 @@ function terrain.create(in_settings)
     local state = {
         pos = start_pos,
         pos_abs = start_pos,
-        node = scene,
+        node = top_node,
         facing = facing,
         readback_node = readback_node,
         ceiling_node = ceiling_node,
@@ -401,10 +414,10 @@ function terrain.create(in_settings)
         local h = win.pixel_height - layout.bottom
         aspect = w / h
         scene"bind".P = math.perspective(math.rad(70), aspect, near_clip, far_clip)
-        scene"viewport".left = layout.left
-        scene"viewport".bottom = layout.bottom
-        scene"viewport".width = w
-        scene"viewport".height = h
+        top_node"viewport".left = layout.left
+        top_node"viewport".bottom = layout.bottom
+        top_node"viewport".width = w
+        top_node"viewport".height = h
     end
 
     function state:update_settings(settings)
@@ -438,17 +451,15 @@ function terrain.create(in_settings)
         floor_detail = settings.floor_detail_texture
         ceiling_texture = settings.ceiling_texture
         ceiling_detail = settings.ceiling_detail_texture
+        hands_texture = settings.hands_texture
         --floor_side_texture = settings.floor_side_texture
         --ceiling_side_texture = settings.ceiling_side_texture
 
-        floor_texture.minfilter = settings.filter
-        floor_texture.magfilter = settings.filter
-        floor_detail.minfilter = settings.filter
-        floor_detail.magfilter = settings.filter
-        ceiling_texture.minfilter = settings.filter
-        ceiling_texture.magfilter = settings.filter
-        ceiling_detail.minfilter = settings.filter
-        ceiling_detail.magfilter = settings.filter
+        floor_texture.filter = settings.filter
+        floor_detail.filter = settings.filter
+        ceiling_texture.filter = settings.filter
+        ceiling_detail.filter = settings.filter
+        hands_texture.filter = settings.filter
 
         floor_node"bind".heightmap = floor_texture
         floor_node"bind".detail = floor_detail
@@ -458,6 +469,8 @@ function terrain.create(in_settings)
         --ceiling_node"bind".side = ceiling_side_texture
         readback_node"bind".floor_texture = floor_texture
         readback_node"bind".ceiling_texture = ceiling_texture
+
+        hand_node"bind".tex = hands_texture
 
         floor_heightmap_scale = settings.floor_heightmap_scale
         ceiling_heightmap_scale = settings.ceiling_heightmap_scale

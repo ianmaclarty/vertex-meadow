@@ -326,6 +326,7 @@ function create_controls(editor_state, terrain_state)
         am.scale(1, -1) ^ am.sprite(sprites.macro_color),
         am.scale(1, -1) ^ am.sprite(sprites.detail_height),
         am.scale(1, -1) ^ am.sprite(sprites.detail_color),
+        am.sprite(sprites.hands),
     }
     local view_select = create_select("VIEW:", view_nodes, 0, ys[1], 35, function(val)
         terrain_state.settings[editor_state.curr_texture] = editor_state.views[editor_state.curr_view].tex
@@ -338,15 +339,28 @@ function create_controls(editor_state, terrain_state)
         elseif val <= 6 then
             editor_state.curr_view = "ceiling"
             editor_state.curr_texture = "ceiling_texture"
-        else
+        elseif val <= 8 then
             editor_state.curr_view = "ceiling_detail"
             editor_state.curr_texture = "ceiling_detail_texture"
+        else
+            editor_state.curr_view = "hands"
+            editor_state.curr_texture = "hands_texture"
         end
         terrain_state.settings[editor_state.curr_texture] = editor_state.tmp_texture
         terrain_state:update_settings(terrain_state.settings)
         editor_state.tmp_scene"bind".tex = editor_state.views[editor_state.curr_view].tex
         local mask = editor_state.draw_brush"color_mask"
-        if val % 2 == 1 then
+        if val == 9 then
+            -- hands
+            editor_state.editor_node"use_program".program = am.shaders.texture2d
+            mask.red = true
+            mask.green = true
+            mask.blue = true
+            mask.alpha = true
+            capture_shader = am.shaders.texture2d
+            editor_state.is_color_view = true
+            editor_state.is_alpha_view = true
+        elseif val % 2 == 1 then
             editor_state.editor_node"use_program".program = heightmap_shader
             mask.red = false
             mask.green = false
@@ -354,6 +368,7 @@ function create_controls(editor_state, terrain_state)
             mask.alpha = true
             capture_shader = alpha_only_shader
             editor_state.is_color_view = false
+            editor_state.is_alpha_view = true
         else
             editor_state.editor_node"use_program".program = color_shader
             mask.red = true
@@ -362,6 +377,7 @@ function create_controls(editor_state, terrain_state)
             mask.alpha = false
             capture_shader = color_only_shader
             editor_state.is_color_view = true
+            editor_state.is_alpha_view = false
         end
     end, 1, {"1", "2", "3", "4", "5", "6", "7", "8"})
     local brush_nodes = {}
@@ -537,7 +553,8 @@ function create_controls(editor_state, terrain_state)
                     dr:set(sr)
                     dg:set(sg)
                     db:set(sb)
-                else
+                end
+                if editor_state.is_alpha_view then
                     local dst = view.img.buffer:view("ubyte", 3, 4)
                     local src = img.buffer:view("ubyte", 0, 4)
                     dst:set(src)
@@ -563,7 +580,12 @@ function create_controls(editor_state, terrain_state)
             dr:set(sr)
             dg:set(sg)
             db:set(sb)
-            da:set(255)
+            if editor_state.is_alpha_view then
+                local sa = src.buffer:view("ubyte", 3, 4)
+                da:set(sa)
+            else
+                da:set(255)
+            end
         else
             local dr = dst.buffer:view("ubyte", 0, 4)
             local dg = dst.buffer:view("ubyte", 1, 4)
@@ -599,6 +621,7 @@ function create_controls(editor_state, terrain_state)
             editor_state.views.ceiling,
             editor_state.views.floor_detail,
             editor_state.views.ceiling_detail,
+            editor_state.views.hands,
             terrain_state
         )
     end)
@@ -608,6 +631,7 @@ function create_controls(editor_state, terrain_state)
             editor_state.views.ceiling,
             editor_state.views.floor_detail,
             editor_state.views.ceiling_detail,
+            editor_state.views.hands,
             terrain_state
         )
         editor_state.modified = false
@@ -670,7 +694,7 @@ function create_controls(editor_state, terrain_state)
     return node
 end
 
-function editor.create(floor, ceiling, floor_detail, ceiling_detail, terrain_state)
+function editor.create(floor, ceiling, floor_detail, ceiling_detail, hands, terrain_state)
     local editor_state = {
         flow = 0,
         views = {
@@ -678,9 +702,11 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, terrain_sta
             ceiling = ceiling,
             floor_detail = floor_detail,
             ceiling_detail = ceiling_detail,
+            hands = hands,
         },
         curr_view = "floor",
         is_color_view = false,
+        is_alpha_view = true,
         curr_texture = "floor_texture",
         curr_brush = 4,
         zoom = 1,
@@ -959,12 +985,6 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, terrain_sta
     function node:update_arrow(pos, facing)
         arrow"translate".position2d = pos * 2 - 1
         arrow"rotate".angle = facing
-    end
-    function node:set_textures(floor, ceiling, floor_detail, ceiling_detail)
-        editor_state.views.floor = floor
-        editor_state.views.ceiling = ceiling
-        editor_state.views.floor_detail = floor_detail
-        editor_state.views.ceiling_detail = ceiling_detail
     end
     function node:set_mode(edit_mode)
         if edit_mode then

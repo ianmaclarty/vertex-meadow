@@ -27,4 +27,16 @@ function texture.read_texture(color_filename, filter)
     }
 end
 
+function texture.read_hand_texture(filename, filter)
+    filter = filter or "linear"
+    local image = am.load_image(filename)
+    local texture = am.texture2d(image)
+    texture.filter = filter
+    return {
+        tex = texture,
+        img = color_image,
+        fb = am.framebuffer(texture)
+    }
+end
+
 return texture

@@ -5,15 +5,17 @@ local title = require "title"
 local focus = require "focus"
 
 local
-function do_share(old_scene, old_bg, floor, ceiling, floor_detail, ceiling_detail, terrain_state)
+function do_share(old_scene, old_bg, floor, ceiling, floor_detail, ceiling_detail, hands, terrain_state)
     floor.fb:read_back()
     ceiling.fb:read_back()
     floor_detail.fb:read_back()
     ceiling_detail.fb:read_back()
+    hands.fb:read_back()
     local floor_data = am.base64_encode(am.encode_png(floor.img))
     local ceiling_data = am.base64_encode(am.encode_png(ceiling.img))
     local floor_detail_data = am.base64_encode(am.encode_png(floor_detail.img))
     local ceiling_detail_data = am.base64_encode(am.encode_png(ceiling_detail.img))
+    local hands_data = am.base64_encode(am.encode_png(hands.img))
     local links = {}
     for _, link in ipairs(terrain_state.settings.links) do
         table.insert(links, {url = link.url, caption = link.caption, pos = link.pos})
@@ -54,6 +56,7 @@ function do_share(old_scene, old_bg, floor, ceiling, floor_detail, ceiling_detai
             ["ceiling.png64"] = {content = ceiling_data},
             ["floor_detail.png64"] = {content = floor_detail_data},
             ["ceiling_detail.png64"] = {content = ceiling_detail_data},
+            ["hands.png64"] = {content = hands_data},
             ["settings.lua"] = {content = "return "..table.tostring(settings, 2)},
         }
     }
@@ -80,14 +83,14 @@ function do_share(old_scene, old_bg, floor, ceiling, floor_detail, ceiling_detai
     end)
 end
 
-function gist.share(floor, ceiling, floor_detail, ceiling_detail, terrain_state)
+function gist.share(floor, ceiling, floor_detail, ceiling_detail, hands, terrain_state)
     local please_wait = am.translate(win.left + win.width/2, win.bottom + win.height/2) ^ am.scale(2) ^ am.text("SHARING... PLEASE WAIT", "center", "center")
     local old_scene = win.scene
     local old_bg = win.clear_color
     win.clear_color = vec4(0, 0, 0, 1)
     win.scene = please_wait
     win.scene:action(function()
-        do_share(old_scene, old_bg, floor, ceiling, floor_detail, ceiling_detail, terrain_state)
+        do_share(old_scene, old_bg, floor, ceiling, floor_detail, ceiling_detail, hands, terrain_state)
         return true
     end)
 end
@@ -111,6 +114,7 @@ function gist.load_gist(id, start)
         "floor_detail.png64", 
         "ceiling.png64", 
         "ceiling_detail.png64", 
+        "hands.png64", 
         "settings.lua"
     }
     local data = {}
@@ -119,20 +123,25 @@ function gist.load_gist(id, start)
             local raw_reqs = {}
             local res = am.parse_json(http.response)
             for _, file in ipairs(files) do
-                if res.files[file].truncated then
-                    local raw_http = am.http(res.files[file].raw_url)
-                    win.scene:action(function()
-                        if raw_http.status == "success" then
-                            data[file] = raw_http.response
-                            return true
-                        elseif raw_http.status == "error" then
-                            am.eval_js("alert('Sorry, but an error occured while loading file "..file..
-                                " (error code: "..raw_http.code.."').');")
-                            return true
-                        end
-                    end)
+                if not res.files[file] then
+                    -- file not found, use empty
+                    data[file] = ""
                 else
-                    data[file] = res.files[file].content
+                    if res.files[file].truncated then
+                        local raw_http = am.http(res.files[file].raw_url)
+                        win.scene:action(function()
+                            if raw_http.status == "success" then
+                                data[file] = raw_http.response
+                                return true
+                            elseif raw_http.status == "error" then
+                                am.eval_js("alert('Sorry, but an error occured while loading file "..file..
+                                    " (error code: "..raw_http.code.."').');")
+                                return true
+                            end
+                        end)
+                    else
+                        data[file] = res.files[file].content
+                    end
                 end
             end
             local function all_loaded()
@@ -148,8 +157,15 @@ function gist.load_gist(id, start)
                     local
                     function extract_img(file)
                         local base64 = data[file]
-                        local buf = am.base64_decode(base64)
-                        local img = am.decode_png(buf)
+                        local buf
+                        local img
+                        if base64 == "" then
+                            img = am.image_buffer(512)
+                            buf = img.buffer
+                        else
+                            buf = am.base64_decode(base64)
+                            img = am.decode_png(buf)
+                        end
                         local tex = am.texture2d(img)
                         tex.wrap = "mirrored_repeat"
                         tex.filter = "linear"
@@ -163,12 +179,14 @@ function gist.load_gist(id, start)
                     local floor_detail = extract_img"floor_detail.png64"
                     local ceiling = extract_img"ceiling.png64"
                     local ceiling_detail = extract_img"ceiling_detail.png64"
+                    local hands = extract_img"hands.png64"
                     local settings = assert(loadstring(data["settings.lua"]))()
                     settings.floor_texture = floor.tex
                     settings.ceiling_texture = ceiling.tex
                     settings.floor_detail_texture = floor_detail.tex
                     settings.ceiling_detail_texture = ceiling_detail.tex
-                    start(floor, floor_detail, ceiling, ceiling_detail, settings)
+                    settings.hands_texture = hands.tex
+                    start(floor, floor_detail, ceiling, ceiling_detail, hands, settings)
                     return true
                 end
             end)

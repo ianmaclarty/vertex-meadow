@@ -10,14 +10,14 @@ local title = require "title"
 local focus = require "focus"
 
 local
-function start(floor, floor_detail, ceiling, ceiling_detail, settings)
+function start(floor, floor_detail, ceiling, ceiling_detail, hands, settings)
     if not settings.links then
         settings.links = {}
     end
     local terrain_state = terrain.create(settings)
 
     local scene = terrain_state.node
-    local ed = editor.create(floor, ceiling, floor_detail, ceiling_detail, terrain_state)
+    local ed = editor.create(floor, ceiling, floor_detail, ceiling_detail, hands, terrain_state)
     ed.hidden = true
     ed.paused = true
 
@@ -82,27 +82,6 @@ function start(floor, floor_detail, ceiling, ceiling_detail, settings)
 
     update_layout(0)
 
-    local curr_level = ""
-    local
-    function load_level(level)
-        local settings = am.load_script("settings"..level..".lua")()
-        floor = texture.read_texture("floor"..level..".png", settings.filter)
-        floor_detail = texture.read_texture("floor"..level.."_detail.png", settings.filter)
-        ceiling = texture.read_texture("ceiling"..level..".png", settings.filter)
-        ceiling_detail = texture.read_texture("ceiling"..level.."_detail.png", settings.filter)
-        ed:set_textures(floor, ceiling, floor_detail, ceiling_detail)
-        settings.floor_texture = floor.tex
-        settings.floor_detail_texture = floor_detail.tex
-        --settings.floor_side_texture = floor_side.tex
-        settings.ceiling_texture = ceiling.tex
-        settings.ceiling_detail_texture = ceiling_detail.tex
-        --settings.ceiling_side_texture = floor_side.tex
-        terrain_state:update_settings(settings)
-        collectgarbage()
-        collectgarbage()
-        curr_level = level
-    end
-
     top:action(function()
         mouse.cursor:update()
         if win:key_pressed("escape") then
@@ -129,10 +108,12 @@ function start(floor, floor_detail, ceiling, ceiling_detail, settings)
             ceiling.fb:read_back()
             floor_detail.fb:read_back()
             ceiling_detail.fb:read_back()
-            am.save_image_as_png(floor.img, "floor"..curr_level..".png")
-            am.save_image_as_png(floor_detail.img, "floor"..curr_level.."_detail.png")
-            am.save_image_as_png(ceiling.img, "ceiling"..curr_level..".png")
-            am.save_image_as_png(ceiling_detail.img, "ceiling"..curr_level.."_detail.png")
+            hands.fb:read_back()
+            am.save_image_as_png(floor.img, "floor.png")
+            am.save_image_as_png(floor_detail.img, "floor_detail.png")
+            am.save_image_as_png(ceiling.img, "ceiling.png")
+            am.save_image_as_png(ceiling_detail.img, "ceiling_detail.png")
+            am.save_image_as_png(hands.img, "hands.png")
         elseif win:key_pressed("f") then
             if win.mode == "fullscreen" then
                 win.mode = "windowed"
@@ -234,12 +215,14 @@ else
     --local floor_side = texture.read_texture("side.jpg")
     local ceiling = texture.read_texture("ceiling.png")
     local ceiling_detail = texture.read_texture("ceiling_detail.png")
+    local hands = texture.read_hand_texture("hands.png")
     settings.floor_texture = floor.tex
     settings.ceiling_texture = ceiling.tex
     settings.floor_detail_texture = floor_detail.tex
     settings.ceiling_detail_texture = ceiling_detail.tex
+    settings.hands_texture = hands.tex
     --settings.floor_side_texture = floor_side.tex
     --settings.ceiling_side_texture = floor_side.tex
 
-    start(floor, floor_detail, ceiling, ceiling_detail, settings)
+    start(floor, floor_detail, ceiling, ceiling_detail, hands, settings)
 end

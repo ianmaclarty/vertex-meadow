@@ -269,7 +269,7 @@ function terrain.create(in_settings)
             ceiling_node,
         }
 
-    local hand_node = am.use_program(am.shaders.texture2d)
+    local hands_node = am.use_program(am.shaders.texture2d)
         ^ am.blend"alpha"
         ^ am.bind{
             MV = mat4(1),
@@ -280,7 +280,7 @@ function terrain.create(in_settings)
         }
         ^ am.draw("triangles", am.rect_indices())
 
-    local top_node = am.viewport(0, 0, 0, 0) ^ {scene, hand_node}
+    local top_node = am.viewport(0, 0, 0, 0) ^ {scene, hands_node}
 
     local uv_readback_node = 
         am.bind{
@@ -470,7 +470,7 @@ function terrain.create(in_settings)
         readback_node"bind".floor_texture = floor_texture
         readback_node"bind".ceiling_texture = ceiling_texture
 
-        hand_node"bind".tex = hands_texture
+        hands_node"bind".tex = hands_texture
 
         floor_heightmap_scale = settings.floor_heightmap_scale
         ceiling_heightmap_scale = settings.ceiling_heightmap_scale

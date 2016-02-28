@@ -553,8 +553,12 @@ function create_controls(editor_state, terrain_state)
                     dr:set(sr)
                     dg:set(sg)
                     db:set(sb)
-                end
-                if editor_state.is_alpha_view then
+                    if editor_state.is_alpha_view then
+                        local da = view.img.buffer:view("ubyte", 3, 4)
+                        local sa = img.buffer:view("ubyte", 3, 4)
+                        da:set(sa)
+                    end
+                elseif editor_state.is_alpha_view then
                     local dst = view.img.buffer:view("ubyte", 3, 4)
                     local src = img.buffer:view("ubyte", 0, 4)
                     dst:set(src)

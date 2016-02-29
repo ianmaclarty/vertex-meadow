@@ -270,6 +270,7 @@ function terrain.create(in_settings)
         }
 
     local hands_node = am.use_program(am.shaders.texture2d)
+        ^ am.depth_test("always", false)
         ^ am.blend"alpha"
         ^ am.bind{
             MV = mat4(1),

@@ -34,7 +34,7 @@ function texture.read_hand_texture(filename, filter)
     texture.filter = filter
     return {
         tex = texture,
-        img = color_image,
+        img = image,
         fb = am.framebuffer(texture)
     }
 end

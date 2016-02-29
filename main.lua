@@ -203,12 +203,7 @@ function start(floor, floor_detail, ceiling, ceiling_detail, hands, settings)
     title.show(settings.title)
 end
 
-local gist_id = gist.get_gist_id()
-if gist_id then
-    gist.load_gist(gist_id, start)
-elseif save.is_save() then
-    save.load_save(start)
-else
+function reset()
     local settings = am.load_script("settings.lua")()
     local floor = texture.read_texture("floor.png")
     local floor_detail = texture.read_texture("floor_detail.png")
@@ -226,3 +221,14 @@ else
 
     start(floor, floor_detail, ceiling, ceiling_detail, hands, settings)
 end
+
+local gist_id = gist.get_gist_id()
+if gist_id then
+    gist.load_gist(gist_id, start)
+elseif save.is_save() then
+    save.load_save(start)
+else
+    reset()
+end
+
+noglobals()

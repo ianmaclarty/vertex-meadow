@@ -13,6 +13,9 @@ function do_save(old_scene, old_bg, floor, ceiling, floor_detail, ceiling_detail
     local ceiling_data = am.base64_encode(am.encode_png(ceiling.img))
     local floor_detail_data = am.base64_encode(am.encode_png(floor_detail.img))
     local ceiling_detail_data = am.base64_encode(am.encode_png(ceiling_detail.img))
+    if not hands.img then
+        hands.img = am.image_buffer(512)
+    end
     local hands_data = am.base64_encode(am.encode_png(hands.img))
     local links = {}
     for _, link in ipairs(terrain_state.settings.links) do

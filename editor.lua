@@ -604,6 +604,14 @@ function create_controls(editor_state, terrain_state)
         download.download_image(dst)
     end)
 
+    local reset_button = create_button("RESET", 390, ys[3] - 2, function()
+        if not editor_state.modified
+            or am.eval_js("confirm('You have unsaved changes, are you sure you want to reset? (all unsaved changes will be lost)');")
+        then
+            reset()
+        end
+    end)
+
     local title_button = create_button("TITLE", 720, ys[7], function()
         local title = terrain_state.settings.title or ""
         title = title:gsub("%'", "")
@@ -677,6 +685,7 @@ function create_controls(editor_state, terrain_state)
 
     group:append(upload_button)
     group:append(download_button)
+    group:append(reset_button)
     group:append(title_button)
     group:append(share_button)
     group:append(save_button)

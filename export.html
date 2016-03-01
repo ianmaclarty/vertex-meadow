@@ -94,6 +94,7 @@ function all_loaded(files) {
         files["floor_detail.png64"] &&
         files["ceiling.png64"] &&
         files["ceiling_detail.png64"] &&
+        files["hands.png64"] &&
         files["settings.lua"] &&
         files["amulet.js"] &&
         files["player.html"] &&
@@ -153,6 +154,7 @@ function load_gist(id) {
         data_zip.file("floor_detail.png", files["floor_detail.png64"], {base64: true});
         data_zip.file("ceiling.png", files["ceiling.png64"], {base64: true});
         data_zip.file("ceiling_detail.png", files["ceiling_detail.png64"], {base64: true});
+        data_zip.file("hands.png", files["hands.png64"], {base64: true});
         data_zip.file("settings.lua", files["settings.lua"]);
         var data_base64 = data_zip.generate({});
 
@@ -171,6 +173,7 @@ function load_gist(id) {
         load_gist_file("floor_detail.png64", res, files, create_export);
         load_gist_file("ceiling.png64", res, files, create_export);
         load_gist_file("ceiling_detail.png64", res, files, create_export);
+        load_gist_file("hands.png64", res, files, create_export);
         load_gist_file("settings.lua", res, files, create_export);
         load_git_text_file("amulet.js", files, create_export);
         load_git_text_file("player.html", files, create_export);

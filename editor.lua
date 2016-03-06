@@ -51,6 +51,17 @@ local color_fshader = [[
     }
 ]]
 
+local hands_fshader = [[
+    precision mediump float;
+    uniform sampler2D tex;
+    varying vec2 v_uv;
+    void main() {
+        vec4 s = texture2D(tex, v_uv);
+        float checks = mod(floor(gl_FragCoord.x / 10.0) + floor(gl_FragCoord.y / 10.0), 2.0);
+        gl_FragColor = vec4(mix(vec3(checks) * 0.2 + 0.4, s.rgb, s.a), 1.0);
+    }
+]]
+
 local alpha_only_fshader = [[
     precision mediump float;
     uniform sampler2D tex;
@@ -73,6 +84,7 @@ local color_only_fshader = [[
 
 local heightmap_shader = am.program(heightmap_vshader, heightmap_fshader)
 local color_shader = am.program(heightmap_vshader, color_fshader)
+local hands_shader = am.program(heightmap_vshader, hands_fshader)
 local alpha_only_shader = am.program(heightmap_vshader, alpha_only_fshader)
 local color_only_shader = am.program(heightmap_vshader, color_only_fshader)
 local capture_shader = alpha_only_shader
@@ -352,7 +364,7 @@ function create_controls(editor_state, terrain_state)
         local mask = editor_state.draw_brush"color_mask"
         if val == 9 then
             -- hands
-            editor_state.editor_node"use_program".program = am.shaders.texture2d
+            editor_state.editor_node"use_program".program = hands_shader
             mask.red = true
             mask.green = true
             mask.blue = true

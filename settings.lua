@@ -8,7 +8,7 @@ return {
     ceiling_y_scale = 100.0,
     floor_y_offset = -100.0,
     ceiling_y_offset = -90.0,
-    fog_color = vec3(0, 0, 0),
+    fog_color = vec3(0, 0.9, 0.5),
     fog_dist = 1000,
     detail_height = 0.03,
     start_pos = vec2(0.25, 0.25),

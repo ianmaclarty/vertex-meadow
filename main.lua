@@ -9,8 +9,7 @@ local help = require "help"
 local title = require "title"
 local focus = require "focus"
 
-local
-function start(floor, floor_detail, ceiling, ceiling_detail, hands, settings)
+function start_engine(floor, floor_detail, ceiling, ceiling_detail, hands, settings)
     if not settings.links then
         settings.links = {}
     end
@@ -33,6 +32,9 @@ function start(floor, floor_detail, ceiling, ceiling_detail, hands, settings)
     local bot = 230
 
     local edit_mode = false
+    mouse.set_visible(edit_mode)
+    ed:set_mode(edit_mode)
+
     local prev_edit_mode = not edit_mode
     terrain_state.paused = edit_mode
     local layout = {
@@ -120,6 +122,23 @@ function start(floor, floor_detail, ceiling, ceiling_detail, hands, settings)
             else
                 win.mode = "fullscreen"
             end
+        end
+        if win:key_pressed"f1" then
+            save.load_save(start_engine, "demo1.json")
+        elseif win:key_pressed"f2" then
+            save.load_save(start_engine, "demo2.json")
+        elseif win:key_pressed"f3" then
+            save.load_save(start_engine, "demo3.json")
+        elseif win:key_pressed"f4" then
+            save.load_save(start_engine, "demo4.json")
+        elseif win:key_pressed"f5" then
+            save.load_save(start_engine, "demo5.json")
+        elseif win:key_pressed"f6" then
+            save.load_save(start_engine, "demo6.json")
+        elseif win:key_pressed"f7" then
+            save.load_save(start_engine, "demo7.json")
+        elseif win:key_pressed"f8" then
+            save.load_save(start_engine, "demo8.json")
         end
         update_layout()
         ed:update_arrow(terrain_state.pos_abs, terrain_state.facing)
@@ -219,14 +238,14 @@ function reset()
     --settings.floor_side_texture = floor_side.tex
     --settings.ceiling_side_texture = floor_side.tex
 
-    start(floor, floor_detail, ceiling, ceiling_detail, hands, settings)
+    start_engine(floor, floor_detail, ceiling, ceiling_detail, hands, settings)
 end
 
 local gist_id = gist.get_gist_id()
 if gist_id then
-    gist.load_gist(gist_id, start)
+    gist.load_gist(gist_id, start_engine)
 elseif save.is_save() then
-    save.load_save(start)
+    save.load_save(start_engine)
 else
     reset()
 end

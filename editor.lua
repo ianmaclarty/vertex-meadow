@@ -538,7 +538,15 @@ function create_controls(editor_state, terrain_state)
         editor_state.modified = true
     end, 0)
 
-    local upload_button = create_button("UPLOAD", 390, ys[1] - 2, function()
+    local reset_button = create_button("RESET", 880, ys[7], function()
+        if am.platform ~= "html" or not editor_state.modified
+            or am.eval_js("confirm('You have unsaved changes, are you sure you want to reset? (all unsaved changes will be lost)');")
+        then
+            reset()
+        end
+    end)
+
+    local upload_button = create_button("UPLOAD", 390, ys[2] - 2, function()
         win.lock_pointer = false
         local img = upload.start_image_upload()
         win.scene:action(function()
@@ -580,7 +588,7 @@ function create_controls(editor_state, terrain_state)
         end)
     end)
 
-    local download_button = create_button("DOWNLOAD", 390, ys[2] - 2, function()
+    local download_button = create_button("DOWNLOAD", 390, ys[3] - 2, function()
         local view = editor_state.views[editor_state.curr_view]
         view.fb:read_back()
         local dst = am.image_buffer(512)
@@ -614,14 +622,6 @@ function create_controls(editor_state, terrain_state)
             da:set(255)
         end
         download.download_image(dst)
-    end)
-
-    local reset_button = create_button("RESET", 390, ys[3] - 2, function()
-        if not editor_state.modified
-            or am.eval_js("confirm('You have unsaved changes, are you sure you want to reset? (all unsaved changes will be lost)');")
-        then
-            reset()
-        end
     end)
 
     local title_button = create_button("TITLE", 720, ys[7], function()
@@ -695,12 +695,14 @@ function create_controls(editor_state, terrain_state)
     group:append(ceiling_y_slider)
     group:append(y_scale_slider)
 
-    group:append(upload_button)
-    group:append(download_button)
     group:append(reset_button)
-    group:append(title_button)
-    group:append(share_button)
-    group:append(save_button)
+    if am.platform == "html" then
+        group:append(upload_button)
+        group:append(download_button)
+        group:append(title_button)
+        group:append(share_button)
+        group:append(save_button)
+    end
     group:append(help_button)
 
     local node = 

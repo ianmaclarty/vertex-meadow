@@ -56,7 +56,13 @@ function do_save(old_scene, old_bg, floor, ceiling, floor_detail, ceiling_detail
         ["hands.png64"] = hands_data,
         ["settings.lua"] = "return "..table.tostring(settings, 2),
     }
-    am.eval_js("localStorage.setItem('vertex_meadow_save', JSON.stringify("..am.to_json(data).."));");
+    if am.platform == "html" then
+        am.eval_js("localStorage.setItem('vertex_meadow_save', JSON.stringify("..am.to_json(data).."));");
+    else
+        local f = io.open("save.json", "w")
+        f:write(am.to_json(data))
+        f:close()
+    end
     win.scene = old_scene
     win.clear_color = old_bg
 end
@@ -77,17 +83,25 @@ function save.is_save()
     return am.eval_js("localStorage.getItem('vertex_meadow_save') ? true : false;");
 end
 
-function save.load_save(start)
+function save.load_save(start, filename)
     local loading = am.translate(win.left + win.width/2, win.bottom + win.height/2) ^ am.scale(2) ^ am.text("LOADING... PLEASE WAIT", "center", "center")
     win.scene = loading
     win.clear_color = vec4(0, 0, 0, 1)
-    local data = am.eval_js("JSON.parse(localStorage.getItem('vertex_meadow_save'))");
+    local data
+    if am.platform == "html" then
+        data = am.eval_js("JSON.parse(localStorage.getItem('vertex_meadow_save'))");
+    else
+        filename = filename or "save.json"
+        local f = io.open(filename, "r")
+        data = am.parse_json(f:read("*a"))
+        f:close()
+    end
     local
     function extract_img(name)
         local base64 = data[name..".png64"]
         local buf
         local img
-        if not base64 or base64 == "" then
+        if not base64 or base64 == "" or base64 == "$" then
             img = am.image_buffer(512)
             buf = img.buffer
         else

@@ -3,13 +3,12 @@ local title = {}
 local win = require "window"
 
 function title.show(title)
-    title = title or ""
+    title = title or "Vertex Meadow"
     local controls = [[
 ~~~~~~~~~~~~~~~~~~~*~~~~~~~~~~~~~~~~~~~
 USE ARROW KEYS OR WASD + MOUSE TO MOVE
 
-PRESS ALT-ENTER FOR FULLSCREEN
-
+]]..(am.platform == "html" and "PRESS ALT-ENTER FOR FULLSCREEN\n\n" or "")..[[
 PRESS E TO EDIT
 
 CLICK TO BEGIN]]

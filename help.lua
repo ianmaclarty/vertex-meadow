@@ -12,8 +12,10 @@ EDIT MODE:                            EXPLORE MODE:
 1-8:             SWITCH VIEW          ARROWS/WASD: MOVE
 Z+MOUSE:         BRUSH SIZE           MOUSE: LOOK
 X+MOUSE:         BRUSH SIZE X         SPACE: JUMP
-Y+MOUSE:         BRUSH SIZE Y         L: CREATE LINK AT CURRENT POS
-R+MOUSE:         ROTATE BRUSH         U: DELETE LINK AT CURRENT POS
+Y+MOUSE:         BRUSH SIZE Y         ]]..(am.platform=="html" and "L: CREATE LINK AT CURRENT POS" or "")..[[
+
+R+MOUSE:         ROTATE BRUSH         ]]..(am.platform=="html" and "U: DELETE LINK AT CURRENT POS" or "")..[[
+
 H+MOUSE:         BRUSH ALPHA(HEIGHT)  I: SET INITIAL POS
 N+MOUSE:         BRUSH CURVE PARAM1
 M+MOUSE:         BRUSH CURVE PARAM2

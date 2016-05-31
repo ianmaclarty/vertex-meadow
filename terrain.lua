@@ -104,7 +104,7 @@ local readback_view = readback_buffer:view("ubyte", 0, 1)
 local readback_texture = am.texture2d(am.image_buffer(readback_buffer, 1))
 local readback_framebuffer = am.framebuffer(readback_texture)
 local readback_vshader = [[
-    precision highp float;
+    precision mediump float;
     attribute vec2 vert;
     void main() {
         gl_Position = vec4(vert, 0.0, 1.0);
@@ -118,8 +118,14 @@ local readback_fshader = [[
     uniform sampler2D ceiling_texture;
     void main() {
         vec4 floor_sample = texture2D(floor_texture, uv);
+        float floor_height = floor_sample.a;
+        float floor_low = fract(floor_height * 255.0);
+        float floor_hi = floor(floor_height * 255.0) / 255.0;
         vec4 ceiling_sample = texture2D(ceiling_texture, uv);
-        gl_FragColor = vec4(floor_sample.a, ceiling_sample.a, 0, 0);
+        float ceiling_height = ceiling_sample.a;
+        float ceiling_low = fract(ceiling_height * 255.0);
+        float ceiling_hi = floor(ceiling_height * 255.0) / 255.0;
+        gl_FragColor = vec4(floor_hi, floor_low, ceiling_hi, ceiling_low);
     }
 ]]
 local readback_shader = am.program(readback_vshader, readback_fshader)
@@ -347,13 +353,19 @@ function terrain.create(in_settings)
             new_pos = new_pos - left * strafe_speed * am.delta_time
         end
 
+        readback_framebuffer:render(readback_node)
+        readback_framebuffer:read_back()
+
         local floor_pos = new_pos + lookahead * forward
+        --local lookup_pos = vec2(-floor_pos.y, -floor_pos.x) * floor_heightmap_scale
         local lookup_pos = vec2(floor_pos.x, floor_pos.y) * floor_heightmap_scale
         uv_readback_node.uv = lookup_pos
         readback_framebuffer:render(readback_node)
         readback_framebuffer:read_back()
-        local new_floor_y = ((readback_view[1]/255)*floor_y_scale + floor_y_offset) + shoulder_height
-        local new_ceiling_y = ((readback_view[2]/255)*ceiling_y_scale + ceiling_y_offset) - head_height
+        local readback_floor_height = readback_view[1]/255+readback_view[2]/65535
+        local new_floor_y = (readback_floor_height*floor_y_scale + floor_y_offset) + shoulder_height
+        local readback_ceiling_height = readback_view[3]/255+readback_view[4]/65535
+        local new_ceiling_y = (readback_ceiling_height*ceiling_y_scale + ceiling_y_offset) - head_height
 
         if settings_updated or state.noclip or new_floor_y - y_pos < barrier_height and new_ceiling_y - new_floor_y > 0 then
             pos = new_pos

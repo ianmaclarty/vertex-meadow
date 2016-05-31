@@ -89,10 +89,10 @@ function start_engine(floor, floor_detail, ceiling, ceiling_detail, hands, setti
         if win:key_pressed("escape") then
             win:close()
             return true
-        --elseif win:key_pressed("lalt") or win:key_pressed("ralt") then
-        --    win.lock_pointer = false
-        --elseif win:mouse_pressed("left") then
-        --    win.lock_pointer = true
+        elseif am.platform ~= "html" and (win:key_pressed("lalt") or win:key_pressed("ralt")) then
+            win.lock_pointer = false
+        elseif am.platform ~= "html" and win:mouse_pressed("left") then
+            win.lock_pointer = true
         elseif win:key_pressed("p") then
             terrain_state.paused = not terrain_state.paused
         elseif win:key_pressed("j") then

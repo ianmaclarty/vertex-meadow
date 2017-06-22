@@ -4,23 +4,6 @@ local win = require "window"
 
 local
 function do_save(old_scene, old_bg, floor, ceiling, floor_detail, ceiling_detail, hands, terrain_state)
-    floor.fb:read_back()
-    ceiling.fb:read_back()
-    floor_detail.fb:read_back()
-    ceiling_detail.fb:read_back()
-    hands.fb:read_back()
-    local floor_data = am.base64_encode(am.encode_png(floor.img))
-    local ceiling_data = am.base64_encode(am.encode_png(ceiling.img))
-    local floor_detail_data = am.base64_encode(am.encode_png(floor_detail.img))
-    local ceiling_detail_data = am.base64_encode(am.encode_png(ceiling_detail.img))
-    if not hands.img then
-        hands.img = am.image_buffer(512)
-    end
-    local hands_data = am.base64_encode(am.encode_png(hands.img))
-    local links = {}
-    for _, link in ipairs(terrain_state.settings.links) do
-        table.insert(links, {url = link.url, caption = link.caption, pos = link.pos})
-    end
     local settings = {
         floor_heightmap_scale = terrain_state.settings.floor_heightmap_scale,
         ceiling_heightmap_scale = terrain_state.settings.ceiling_heightmap_scale,
@@ -46,14 +29,12 @@ function do_save(old_scene, old_bg, floor, ceiling, floor_detail, ceiling_detail
         title = terrain_state.settings.title,
         wireframe = terrain_state.settings.wireframe,
         noclip = terrain_state.settings.noclip,
-        links = links,
+        pos_internal = terrain_state.pos_internal,
+        facing = terrain_state.facing,
+        pitch = terrain_state.pitch,
+        y_pos = terrain_state.y_pos,
     }
     local data = {
-        ["floor.png64"] = floor_data,
-        ["ceiling.png64"] = ceiling_data,
-        ["floor_detail.png64"] = floor_detail_data,
-        ["ceiling_detail.png64"] = ceiling_detail_data,
-        ["hands.png64"] = hands_data,
         ["settings.lua"] = "return "..table.tostring(settings, 2),
     }
     if am.platform == "html" then
@@ -80,7 +61,17 @@ function save.save(floor, ceiling, floor_detail, ceiling_detail, hands, terrain_
 end
 
 function save.is_save()
-    return am.eval_js("localStorage.getItem('vertex_meadow_save') ? true : false;");
+    if am.platform == "html" then
+        return am.eval_js("localStorage.getItem('vertex_meadow_save') ? true : false;");
+    else
+        local f = io.open("save.json", "r")
+        if f then
+            f:close()
+            return true
+        else
+            return false
+        end
+    end
 end
 
 function save.load_save(start, filename)
@@ -96,39 +87,8 @@ function save.load_save(start, filename)
         data = am.parse_json(f:read("*a"))
         f:close()
     end
-    local
-    function extract_img(name)
-        local base64 = data[name..".png64"]
-        local buf
-        local img
-        if not base64 or base64 == "" or base64 == "$" then
-            img = am.image_buffer(512)
-            buf = img.buffer
-        else
-            buf = am.base64_decode(base64)
-            img = am.decode_png(buf)
-        end
-        local tex = am.texture2d(img)
-        tex.wrap = "mirrored_repeat"
-        tex.filter = "linear"
-        return {
-            tex = tex,
-            img = img,
-            fb = am.framebuffer(tex)
-        }
-    end
-    local floor = extract_img"floor"
-    local floor_detail = extract_img"floor_detail"
-    local ceiling = extract_img"ceiling"
-    local ceiling_detail = extract_img"ceiling_detail"
-    local hands = extract_img"hands"
     local settings = assert(loadstring(data["settings.lua"]))()
-    settings.floor_texture = floor.tex
-    settings.ceiling_texture = ceiling.tex
-    settings.floor_detail_texture = floor_detail.tex
-    settings.ceiling_detail_texture = ceiling_detail.tex
-    settings.hands_texture = hands.tex
-    start(floor, floor_detail, ceiling, ceiling_detail, hands, settings)
+    reset(settings)
 end
 
 return save

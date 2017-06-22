@@ -303,11 +303,11 @@ function terrain.create(in_settings)
         }
         ^ uv_readback_node
 
-    local pitch = 0
-    local facing = 0
-    local pos = start_pos / floor_heightmap_scale
+    local pitch = in_settings.pitch or 0
+    local facing = in_settings.facing or 0
+    local pos = in_settings.pos_internal or start_pos / floor_heightmap_scale
     local up = vec3(0, 1, 0)
-    local y_pos = 0
+    local y_pos = in_settings.y_pos or 0
     local y_speed = 0
     local on_ground = false
     local floor_y = 255
@@ -325,6 +325,7 @@ function terrain.create(in_settings)
 
     local settings_updated = true
     local start_pos_changed = false
+    local first = true
 
     scene:action(function()
         if state.paused and not start_pos_changed then
@@ -386,9 +387,13 @@ function terrain.create(in_settings)
         -- XXX why do we need minus forward here?
         local V = math.lookat(vec3(pos.x, 0, pos.y), vec3(pos.x - forward.x, 0, pos.y - forward.y), up)
         scene"bind".V = math.inverse(V)
-        local mouse_delta = win:mouse_norm_delta()
-        facing = facing - mouse_delta.x * pi
-        pitch = math.clamp(pitch + mouse_delta.y, -0.80, 0.80)
+        if not first then
+            local mouse_delta = win:mouse_norm_delta()
+            facing = facing - mouse_delta.x * pi
+            pitch = math.clamp(pitch + mouse_delta.y, -0.80, 0.80)
+        else
+            first = false
+        end
         scene"pitch".rotation = quat(pitch, vec3(-1, 0, 0))
 
         scene"bind".t = am.frame_time
@@ -424,7 +429,10 @@ function terrain.create(in_settings)
         end
         state.pos = fract
         state.pos_abs = pos2
+        state.pos_internal = pos
         state.facing = facing
+        state.pitch = pitch
+        state.y_pos = y_pos
 
         --scene"bind".light_dir = math.normalize(vec3(math.sin(am.frame_time) * 2, math.cos(am.frame_time) * 2, 10))
         local light_dir = math.normalize(vec3(0.4, 0.01, 1.0))

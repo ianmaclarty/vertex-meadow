@@ -9,6 +9,7 @@ local help = require "help"
 local focus = require "focus"
 local download = require "download"
 local upload = require "upload"
+local texture = require "texture"
 
 local label_w = 64
 local val_w = 32
@@ -338,7 +339,7 @@ function create_controls(editor_state, terrain_state)
         am.scale(1, -1) ^ am.sprite(sprites.macro_color),
         am.scale(1, -1) ^ am.sprite(sprites.detail_height),
         am.scale(1, -1) ^ am.sprite(sprites.detail_color),
-        am.sprite(sprites.hands),
+        --am.sprite(sprites.hands),
     }
     local view_select = create_select("VIEW:", view_nodes, 0, ys[1], 35, function(val)
         terrain_state.settings[editor_state.curr_texture] = editor_state.views[editor_state.curr_view].tex
@@ -434,7 +435,7 @@ function create_controls(editor_state, terrain_state)
         am.sprite(sprites.filter_linear),
         am.sprite(sprites.filter_nearest),
     }
-    local filter_select = create_select("FLTR:", filter_nodes, 220, ys[7], 30, function(val)
+    local filter_select = create_select("FLTR:", filter_nodes, 820, ys[3], 30, function(val)
         local filter = "nearest"
         if val == 1 then
             filter = "linear"
@@ -475,7 +476,7 @@ function create_controls(editor_state, terrain_state)
         terrain_state.settings.shininess = (val ^ 3) * 200
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
-    end, 0)
+    end, (terrain_state.settings.shininess / 200)^(1/3))
     local speed_slider = create_slider("SPEED:", 480, ys[7], sprites.flow_slider, function(val)
         terrain_state.settings.walk_speed = val * 100 + 10
         terrain_state:update_settings(terrain_state.settings)
@@ -513,30 +514,37 @@ function create_controls(editor_state, terrain_state)
         editor_state.modified = true
     end, 3)
 
-    local detail_height_slider = create_slider("DTL Y:", 820, ys[3], sprites.med_slider, function(val)
+    local detail_height_slider = create_slider("DTL Y:", 200, ys[3], sprites.med_slider, function(val)
         terrain_state.settings.detail_height = val * 0.2 + 0.005
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
-    end, 0)
-    local detail_scale_slider = create_slider("DTL XZ:", 820, ys[4], sprites.med_slider, function(val)
+    end, math.sqrt((terrain_state.settings.detail_height - 0.005) / 0.2))
+    local detail_scale_slider = create_slider("DTL XZ:", 200, ys[4], sprites.med_slider, function(val)
         local s = (val ^ 2) * 0.1 + 0.0005
         terrain_state.settings.floor_detail_scale = s
         terrain_state.settings.ceiling_detail_scale = s
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
-    end, 0)
-    local ceiling_y_slider = create_slider("SKY Y:", 820, ys[5], sprites.med_slider, function(val)
+    end, math.sqrt((terrain_state.settings.floor_detail_scale - 0.0005) / 0.1))
+    local ceiling_y_slider = create_slider("SKY Y:", 200, ys[5], sprites.med_slider, function(val)
         terrain_state.settings.ceiling_y_offset = (val ^ 2 * 1000) - 100
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
-    end, 0)
-    local y_scale_slider = create_slider("VSCALE:", 820, ys[6], sprites.med_slider, function(val)
+    end, math.sqrt((terrain_state.settings.ceiling_y_offset + 100) / 1000))
+    local y_scale_slider = create_slider("VSCALE:", 200, ys[6], sprites.med_slider, function(val)
         local s = (val ^ 2) * 500 + 50
         terrain_state.settings.floor_y_scale = s
         terrain_state.settings.ceiling_y_scale = s
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
-    end, 0)
+    end, math.sqrt((terrain_state.settings.floor_y_scale - 50) / 500))
+    local heightmap_scale_slider = create_slider("SCL XZ:", 200, ys[7], sprites.med_slider, function(val)
+        local s = (val ^ 2) * 0.008 + 0.0005
+        terrain_state.settings.floor_heightmap_scale = s
+        terrain_state.settings.ceiling_heightmap_scale = s
+        terrain_state:update_settings(terrain_state.settings)
+        editor_state.modified = true
+    end, math.sqrt((terrain_state.settings.floor_heightmap_scale - 0.0005) / 0.008))
 
     local reset_button = create_button("RESET", 880, ys[7], function()
         if am.platform ~= "html" or not editor_state.modified
@@ -649,6 +657,24 @@ function create_controls(editor_state, terrain_state)
             terrain_state
         )
     end)
+    local refresh_button = create_button("REFRESH", 800, ys[7], function()
+        local floor = texture.read_texture("floor.png")
+        local floor_detail = texture.read_texture("floor_detail.png")
+        local ceiling = texture.read_texture("ceiling.png")
+        local ceiling_detail = texture.read_texture("ceiling_detail.png")
+        local hands = texture.read_hand_texture("hands.png")
+        terrain_state.settings.floor_texture = floor.tex
+        terrain_state.settings.ceiling_texture = ceiling.tex
+        terrain_state.settings.floor_detail_texture = floor_detail.tex
+        terrain_state.settings.ceiling_detail_texture = ceiling_detail.tex
+        terrain_state.settings.hands_texture = hands.tex
+        terrain_state:update_settings(terrain_state.settings)
+        editor_state.views.floor = floor
+        editor_state.views.ceiling = ceiling
+        editor_state.views.floor_detail = floor_detail
+        editor_state.views.ceiling_detail = ceiling_detail
+        editor_state.views.hands = hands
+    end)
     local save_button = create_button("SAVE", 880, ys[7], function()
         save.save(
             editor_state.views.floor,
@@ -669,13 +695,13 @@ function create_controls(editor_state, terrain_state)
         am.bind{P = mat4(1), MV = mat4(1)}
         ^ am.rect(-1, -1, 1, 1, vec4(0.2, 0.2, 0.2, 1)))
     group:append(view_select)
-    group:append(brush_select)
-    group:append(exp1_slider)
-    group:append(exp2_slider)
-    group:append(color_picker)
-    group:append(alpha_slider)
-    group:append(blend_select)
-    group:append(flow_slider)
+    --group:append(brush_select)
+    --group:append(exp1_slider)
+    --group:append(exp2_slider)
+    --group:append(color_picker)
+    --group:append(alpha_slider)
+    --group:append(blend_select)
+    --group:append(flow_slider)
     group:append(filter_select)
 
     group:append(fog_color_picker)
@@ -692,16 +718,19 @@ function create_controls(editor_state, terrain_state)
 
     group:append(detail_height_slider)
     group:append(detail_scale_slider)
+    group:append(heightmap_scale_slider)
     group:append(ceiling_y_slider)
     group:append(y_scale_slider)
 
-    group:append(reset_button)
+    --group:append(reset_button)
+    group:append(save_button)
+    group:append(refresh_button)
+
     if am.platform == "html" then
         group:append(upload_button)
         group:append(download_button)
         group:append(title_button)
         group:append(share_button)
-        group:append(save_button)
     end
     group:append(help_button)
 
@@ -786,7 +815,7 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, hands, terr
             }
             ^ am.draw("triangles", am.rect_indices())
             ,
-            draw_brush
+            --draw_brush
         }
     editor_state.tmp_scene = tmp_scene
     local arrow =
@@ -824,7 +853,7 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, hands, terr
             ,
             arrow
             ,
-            cursor
+            --cursor
         }
     editor_state.editor_node = editor_node
     local controls = create_controls(editor_state, terrain_state)
@@ -933,6 +962,7 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, hands, terr
             brush_angle = 0
             draw_brush"brush_rotate".angle = brush_angle
         end
+        --[[
         if win:key_pressed"c" and not mouse.cursor.hidden and in_bounds(pos, editor_bounds) then
             local sprite = sprites["brush"..editor_state.curr_brush]
             local x1 = sprite.s1 * 2 - 1
@@ -987,6 +1017,7 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, hands, terr
                 end
             end
         end
+        ]]
         if win:key_pressed("0") then
             editor_node:action(am.tween(editor_state, 0.1, {zoom = editor_state.zoom + 20}, am.ease.cubic))
         elseif win:key_pressed("9") then

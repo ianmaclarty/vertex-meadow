@@ -106,6 +106,7 @@ function start_engine(floor, floor_detail, ceiling, ceiling_detail, hands, setti
             terrain_state.paused = edit_mode
             ed:set_mode(edit_mode)
         elseif (win:key_down"lctrl" or win:key_down"rctrl") and win:key_pressed("s") then
+            --[[
             floor.fb:read_back()
             ceiling.fb:read_back()
             floor_detail.fb:read_back()
@@ -116,6 +117,7 @@ function start_engine(floor, floor_detail, ceiling, ceiling_detail, hands, setti
             am.save_image_as_png(ceiling.img, "ceiling.png")
             am.save_image_as_png(ceiling_detail.img, "ceiling_detail.png")
             am.save_image_as_png(hands.img, "hands.png")
+            ]]
         elseif win:key_pressed("f") then
             if win.mode == "fullscreen" then
                 win.mode = "windowed"
@@ -219,11 +221,11 @@ function start_engine(floor, floor_detail, ceiling, ceiling_detail, hands, setti
     end)
 
     win.scene = top
-    title.show(settings.title)
+    --title.show(settings.title)
 end
 
-function reset()
-    local settings = am.load_script("settings.lua")()
+function reset(settings)
+    settings = settings or am.load_script("settings.lua")()
     local floor = texture.read_texture("floor.png")
     local floor_detail = texture.read_texture("floor_detail.png")
     --local floor_side = texture.read_texture("side.jpg")

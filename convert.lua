@@ -15,9 +15,6 @@ function convert(prefix)
     local alpha_view = color_image.buffer:view("ubyte", 3, 4)
     local depth_view = heightmap_image.buffer:view("ubyte", 0, 4)
     alpha_view:set(depth_view)
-    local texture = am.texture2d(color_image)
-    texture.wrap = "mirrored_repeat"
-    texture.filter = "linear"
     am.save_image(color_image, prefix..".png")
 end
 

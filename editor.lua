@@ -732,7 +732,7 @@ function create_controls(editor_state, terrain_state)
         group:append(title_button)
         group:append(share_button)
     end
-    group:append(help_button)
+    --group:append(help_button)
 
     local node = 
         am.viewport(0, 0, 0, 0)

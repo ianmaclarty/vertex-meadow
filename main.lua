@@ -125,6 +125,7 @@ function start_engine(floor, floor_detail, ceiling, ceiling_detail, hands, setti
                 win.mode = "fullscreen"
             end
         end
+        --[[
         if win:key_pressed"f1" then
             save.load_save(start_engine, "demo1.json")
         elseif win:key_pressed"f2" then
@@ -142,6 +143,7 @@ function start_engine(floor, floor_detail, ceiling, ceiling_detail, hands, setti
         elseif win:key_pressed"f8" then
             save.load_save(start_engine, "demo8.json")
         end
+        ]]
         update_layout()
         ed:update_arrow(terrain_state.pos_abs, terrain_state.facing)
         if not edit_mode then

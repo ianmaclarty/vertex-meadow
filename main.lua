@@ -25,7 +25,7 @@ function start_engine(floor, floor_detail, ceiling, ceiling_detail, hands, setti
     local top = am.group{
         scene,
         ed,
-        mouse.cursor,
+        --mouse.cursor,
         messages,
     }
 
@@ -89,10 +89,6 @@ function start_engine(floor, floor_detail, ceiling, ceiling_detail, hands, setti
         if win:key_pressed("escape") then
             win:close()
             return true
-        elseif am.platform ~= "html" and (win:key_pressed("lalt") or win:key_pressed("ralt")) then
-            win.lock_pointer = false
-        elseif am.platform ~= "html" and win:mouse_pressed("left") then
-            win.lock_pointer = true
         elseif win:key_pressed("p") then
             terrain_state.paused = not terrain_state.paused
         elseif win:key_pressed("j") then
@@ -105,6 +101,7 @@ function start_engine(floor, floor_detail, ceiling, ceiling_detail, hands, setti
             mouse.set_visible(edit_mode)
             terrain_state.paused = edit_mode
             ed:set_mode(edit_mode)
+            win.lock_pointer = not edit_mode
         elseif (win:key_down"lctrl" or win:key_down"rctrl") and win:key_pressed("s") then
             --[[
             floor.fb:read_back()

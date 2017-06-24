@@ -107,14 +107,15 @@ local draw_fshader = [[
     precision mediump float;
     uniform sampler2D tex;
     uniform vec4 color;
-    uniform float exp1;
-    uniform float exp2;
+    //uniform float exp1;
+    //uniform float exp2;
     varying vec2 v_uv;
     void main() {
-        vec4 s = texture2D(tex, v_uv);
-        if (s.a < 1.0/255.0) discard;
-        float alpha = pow(1.0 - pow(1.0 - s.a, exp1), exp2) * color.a;
-        gl_FragColor = vec4(s.rgb * color.rgb * color.a, alpha);
+        //vec4 s = texture2D(tex, v_uv);
+        //if (s.a < 1.0/255.0) discard;
+        //float alpha = pow(1.0 - pow(1.0 - s.a, exp1), exp2) * color.a;
+        //gl_FragColor = vec4(s.rgb * color.rgb * color.a, alpha);
+        gl_FragColor = vec4(1.0);
     }
 ]]
 

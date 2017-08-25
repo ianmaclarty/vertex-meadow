@@ -96,32 +96,10 @@ local hands_fshader = [[
     }
 ]]
 
-local alpha_only_fshader = [[
-    precision mediump float;
-    uniform sampler2D tex;
-    varying vec2 v_uv;
-    void main() {
-        vec4 s = texture2D(tex, v_uv);
-        gl_FragColor = vec4(s.a);
-    }
-]]
-
-local color_only_fshader = [[
-    precision mediump float;
-    uniform sampler2D tex;
-    varying vec2 v_uv;
-    void main() {
-        vec4 s = texture2D(tex, v_uv);
-        gl_FragColor = vec4(s.rgb, 1.0);
-    }
-]]
-
 local heightmap_shader = am.program(heightmap_vshader, heightmap_fshader)
 local color_shader = am.program(heightmap_vshader, color_fshader)
 local hands_shader = am.program(heightmap_vshader, hands_fshader)
-local alpha_only_shader = am.program(heightmap_vshader, alpha_only_fshader)
-local color_only_shader = am.program(heightmap_vshader, color_only_fshader)
-local capture_shader = alpha_only_shader
+local capture_shader = am.shaders.texture2d;
 
 local draw_vshader = [[
     precision highp float;
@@ -427,7 +405,6 @@ function create_controls(editor_state, terrain_state)
             mask.green = false
             mask.blue = false
             mask.alpha = true
-            capture_shader = alpha_only_shader
             editor_state.is_color_view = false
             editor_state.is_alpha_view = true
         else
@@ -436,7 +413,6 @@ function create_controls(editor_state, terrain_state)
             mask.green = true
             mask.blue = true
             mask.alpha = false
-            capture_shader = color_only_shader
             editor_state.is_color_view = true
             editor_state.is_alpha_view = false
         end

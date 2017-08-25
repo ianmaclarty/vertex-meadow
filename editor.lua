@@ -35,6 +35,22 @@ brush_sprite_specs[num_brushes] = {
     width = 256,
     height = 256,
 }
+local capture_tex = am.texture2d(512)
+num_brushes = num_brushes + 1
+local capture_brush = num_brushes
+brush_sprite_specs[num_brushes] = {
+    texture = capture_tex,
+    x1 = 0,
+    y1 = 0,
+    x2 = 256,
+    y2 = 256,
+    s1 = 0,
+    t1 = 1,
+    s2 = 1,
+    t2 = 0,
+    width = 256,
+    height = 256,
+}
 
 local heightmap_vshader = [[
     precision highp float;
@@ -52,12 +68,10 @@ local heightmap_vshader = [[
 local heightmap_fshader = [[
     precision mediump float;
     uniform sampler2D tex;
-    uniform vec4 height_src;
     varying vec2 v_uv;
     void main() {
-        vec4 s = texture2D(tex, v_uv) * height_src;
-        float alpha = s.r + s.g + s.b + s.a;
-        gl_FragColor = vec4(vec3(alpha), 1.0);
+        vec4 s = texture2D(tex, v_uv);
+        gl_FragColor = vec4(vec3(s.a), 1.0);
     }
 ]]
 
@@ -360,7 +374,6 @@ function update_height_src(editor_state)
         height_src = vec4(0, 0, 0, 1)
     end
     editor_state.draw_brush"bind".height_src = height_src
-    editor_state.editor_node"bind".height_src = height_src
 end
 
 local
@@ -776,7 +789,7 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, hands, terr
         curr_brush = 4,
         zoom = 1,
         edit_mode = false,
-        brush_fb = am.framebuffer(sprites.texture),
+        brush_fb = am.framebuffer(capture_tex),
         modified = false,
     }
     local brush_size = vec2(0.0005)
@@ -851,7 +864,6 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, hands, terr
             P = mat4(1),
             MV = mat4(1),
             tex = tmp_texture,
-            height_src = vec4(0, 0, 0, 1),
         }
         ^ am.scale(1):tag"bg"
         ^ am.translate(0, 0)
@@ -975,7 +987,7 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, hands, terr
             draw_brush"brush_rotate".angle = brush_angle
         end
         if win:key_pressed"c" and not mouse.cursor.hidden and in_bounds(pos, editor_bounds) then
-            local sprite = brush_sprite_specs[editor_state.curr_brush]
+            local sprite = brush_sprite_specs[capture_brush]
             local x1 = sprite.s1 * 2 - 1
             local y1 = sprite.t1 * 2 - 1
             local x2 = sprite.s2 * 2 - 1

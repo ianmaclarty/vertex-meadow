@@ -14,9 +14,27 @@ local label_w = 64
 local val_w = 32
 
 local num_brushes = 0
+local brush_sprite_specs = {}
 while sprites["brush"..(num_brushes + 1)] do
     num_brushes = num_brushes + 1
+    brush_sprite_specs[num_brushes] = sprites["brush"..(num_brushes)]
 end
+local webcam_tex = am.texture2d(512)
+num_brushes = num_brushes + 1
+local webcam_brush = num_brushes
+brush_sprite_specs[num_brushes] = {
+    texture = webcam_tex,
+    x1 = 0,
+    y1 = 0,
+    x2 = 256,
+    y2 = 256,
+    s1 = 0,
+    t1 = 1,
+    s2 = 1,
+    t2 = 0,
+    width = 256,
+    height = 256,
+}
 
 local heightmap_vshader = [[
     precision highp float;
@@ -34,10 +52,12 @@ local heightmap_vshader = [[
 local heightmap_fshader = [[
     precision mediump float;
     uniform sampler2D tex;
+    uniform vec4 height_src;
     varying vec2 v_uv;
     void main() {
-        vec4 s = texture2D(tex, v_uv);
-        gl_FragColor = vec4(vec3(s.a), 1.0);
+        vec4 s = texture2D(tex, v_uv) * height_src;
+        float alpha = s.r + s.g + s.b + s.a;
+        gl_FragColor = vec4(vec3(alpha), 1.0);
     }
 ]]
 
@@ -108,11 +128,14 @@ local draw_fshader = [[
     uniform vec4 color;
     uniform float exp1;
     uniform float exp2;
+    uniform vec4 height_src;
     varying vec2 v_uv;
     void main() {
         vec4 s = texture2D(tex, v_uv);
-        if (s.a < 1.0/255.0) discard;
-        float alpha = pow(1.0 - pow(1.0 - s.a, exp1), exp2) * color.a;
+        vec4 v = s * height_src;
+        float alpha = v.r + v.g + v.b + v.a;
+        if (alpha < 1.0/255.0) discard;
+        alpha = pow(1.0 - pow(1.0 - alpha, exp1), exp2) * color.a;
         gl_FragColor = vec4(s.rgb * color.rgb * color.a, alpha);
     }
 ]]
@@ -326,6 +349,19 @@ local ys = {214}
 for i = 1, 6 do
     ys[#ys+1] = ys[1] - i * 32
 end
+local xs = {0, 580, 920}
+
+local
+function update_height_src(editor_state)
+    local height_src
+    if editor_state.curr_brush == webcam_brush and editor_state.is_alpha_view then
+        height_src = vec4(0.33, 0.33, 0.33, 0)
+    else
+        height_src = vec4(0, 0, 0, 1)
+    end
+    editor_state.draw_brush"bind".height_src = height_src
+    editor_state.editor_node"bind".height_src = height_src
+end
 
 local
 function create_controls(editor_state, terrain_state)
@@ -340,7 +376,7 @@ function create_controls(editor_state, terrain_state)
         am.scale(1, -1) ^ am.sprite(sprites.detail_color),
         am.sprite(sprites.hands),
     }
-    local view_select = create_select("VIEW:", view_nodes, 0, ys[1], 35, function(val)
+    local view_select = create_select("VIEW:", view_nodes, xs[1], ys[1], 35, function(val)
         terrain_state.settings[editor_state.curr_texture] = editor_state.views[editor_state.curr_view].tex
         if val <= 2 then
             editor_state.curr_view = "floor"
@@ -391,25 +427,27 @@ function create_controls(editor_state, terrain_state)
             editor_state.is_color_view = true
             editor_state.is_alpha_view = false
         end
+        update_height_src(editor_state)
     end, 1, {"1", "2", "3", "4", "5", "6", "7", "8"})
     local brush_nodes = {}
     for i = 1, num_brushes do
-        table.insert(brush_nodes, am.scale(28/256) ^ am.sprite(sprites["brush"..i]))
+        table.insert(brush_nodes, am.scale(28/256) ^ am.sprite(brush_sprite_specs[i]))
     end
-    local brush_select = create_select("BRUSH:", brush_nodes, 0, ys[2], 30, function(b)
+    local brush_select = create_select("BRUSH:", brush_nodes, xs[1], ys[2], 30, function(b)
         editor_state.curr_brush = b
-        editor_state.draw_brush"brush_sprite".source = sprites["brush"..editor_state.curr_brush]
+        editor_state.draw_brush"brush_sprite".source = brush_sprite_specs[editor_state.curr_brush]
+        update_height_src(editor_state)
     end, editor_state.curr_brush)
-    local exp1_slider = create_slider("CURVE:", 0, ys[3], sprites.exp_slider, function(val)
+    local exp1_slider = create_slider("CURVE:", xs[1], ys[3], sprites.exp_slider, function(val)
         editor_state.draw_brush"bind".exp1 = 10 ^ (val * 2 - 1)
     end, 0.5, false, "n")
-    local exp2_slider = create_slider(nil, 220, ys[3], sprites.exp_slider, function(val)
+    local exp2_slider = create_slider(nil, xs[1] + 220, ys[3], sprites.exp_slider, function(val)
         editor_state.draw_brush"bind".exp2 = 10 ^ (val * 2 - 1)
     end, 0.5, false, "m")
-    local color_picker = create_color_picker("RGB:", 0, ys[4], function(val)
+    local color_picker = create_color_picker("RGB:", xs[1], ys[4], function(val)
         editor_state.draw_brush"brush_sprite".color = editor_state.draw_brush"brush_sprite".color{rgb = val}
     end, editor_state.draw_brush"brush_sprite".color.rgb)
-    local alpha_slider = create_slider("ALPHA:", 0, ys[5], sprites.height_slider, function(val)
+    local alpha_slider = create_slider("ALPHA:", xs[1], ys[5], sprites.height_slider, function(val)
         editor_state.draw_brush"brush_sprite".color = editor_state.draw_brush"brush_sprite".color{a = val}
     end, editor_state.draw_brush"brush_sprite".color.a, true, "h")
     local blend_modes = {"add", "subtract", "premult", "off", "multiply"}
@@ -420,10 +458,10 @@ function create_controls(editor_state, terrain_state)
         am.sprite(sprites.blend_eq),
         am.sprite(sprites.blend_mul),
     }
-    local blend_select = create_select("BLEND:", blend_nodes, 0, ys[6], 30, function(val)
+    local blend_select = create_select("BLEND:", blend_nodes, xs[1], ys[6], 30, function(val)
         editor_state.draw_brush"brush_sprite""blend".mode = blend_modes[val]
     end, 3)
-    local flow_slider = create_slider("FLOW:", 0, ys[7], sprites.flow_slider, function(val)
+    local flow_slider = create_slider("FLOW:", xs[1], ys[7], sprites.flow_slider, function(val)
         if val < 0.1 then
             editor_state.flow = 0
         else
@@ -434,7 +472,7 @@ function create_controls(editor_state, terrain_state)
         am.sprite(sprites.filter_linear),
         am.sprite(sprites.filter_nearest),
     }
-    local filter_select = create_select("FLTR:", filter_nodes, 220, ys[7], 30, function(val)
+    local filter_select = create_select("FLTR:", filter_nodes, xs[1] + 220, ys[7], 30, function(val)
         local filter = "nearest"
         if val == 1 then
             filter = "linear"
@@ -446,48 +484,48 @@ function create_controls(editor_state, terrain_state)
         editor_state.modified = true
     end, 1)
 
-    local fog_color_picker = create_color_picker("FOG:", 480, ys[1], function(val)
+    local fog_color_picker = create_color_picker("FOG:", xs[2], ys[1], function(val)
         terrain_state.settings.fog_color = val
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, terrain_state.settings.fog_color.rgb)
-    local fog_dist_slider = create_slider("FOG Z:", 480, ys[2], sprites.height_slider, function(val)
+    local fog_dist_slider = create_slider("FOG Z:", xs[2], ys[2], sprites.height_slider, function(val)
         terrain_state.settings.fog_dist = val * 2000
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, terrain_state.settings.fog_dist / 2000)
-    local ambient_picker = create_color_picker("AMB:", 480, ys[3], function(val)
+    local ambient_picker = create_color_picker("AMB:", xs[2], ys[3], function(val)
         terrain_state.settings.ambient = val
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, terrain_state.settings.ambient)
-    local diffuse_picker = create_color_picker("DIFF:", 480, ys[4], function(val)
+    local diffuse_picker = create_color_picker("DIFF:", xs[2], ys[4], function(val)
         terrain_state.settings.diffuse = val
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, terrain_state.settings.diffuse)
-    local specular_picker = create_color_picker("SPEC:", 480, ys[5], function(val)
+    local specular_picker = create_color_picker("SPEC:", xs[2], ys[5], function(val)
         terrain_state.settings.specular = val
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, terrain_state.settings.specular)
-    local shininess_slider = create_slider("SHINE:", 480, ys[6], sprites.height_slider, function(val)
+    local shininess_slider = create_slider("SHINE:", xs[2], ys[6], sprites.height_slider, function(val)
         terrain_state.settings.shininess = (val ^ 3) * 200
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, 0)
-    local speed_slider = create_slider("SPEED:", 480, ys[7], sprites.flow_slider, function(val)
+    local speed_slider = create_slider("SPEED:", xs[2], ys[7], sprites.flow_slider, function(val)
         terrain_state.settings.walk_speed = val * 100 + 10
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, 0.5)
 
-    local wireframe_checkbox = create_checkbox("WIRE/F:", 820, ys[1], function(val)
+    local wireframe_checkbox = create_checkbox("WIRE/F:", xs[3], ys[1], function(val)
         terrain_state.settings.wireframe = val
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, terrain_state.settings.wireframe)
-    local noclip_checkbox = create_checkbox("NOCLIP:", 930, ys[1], function(val)
+    local noclip_checkbox = create_checkbox("NOCLIP:", xs[3] + 110, ys[1], function(val)
         terrain_state.settings.noclip = val
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
@@ -498,7 +536,7 @@ function create_controls(editor_state, terrain_state)
         am.sprite(sprites.mesh_med),
         am.sprite(sprites.mesh_high),
     }
-    local mesh_select = create_select("MESH:", mesh_nodes, 820, ys[2], 30, function(val)
+    local mesh_select = create_select("MESH:", mesh_nodes, xs[3], ys[2], 30, function(val)
         if val == 1 then
             terrain_state.settings.width = 100
             terrain_state.settings.depth = 100
@@ -513,24 +551,24 @@ function create_controls(editor_state, terrain_state)
         editor_state.modified = true
     end, 3)
 
-    local detail_height_slider = create_slider("DTL Y:", 820, ys[3], sprites.med_slider, function(val)
+    local detail_height_slider = create_slider("DTL Y:", xs[3], ys[3], sprites.med_slider, function(val)
         terrain_state.settings.detail_height = val * 0.2 + 0.005
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, 0)
-    local detail_scale_slider = create_slider("DTL XZ:", 820, ys[4], sprites.med_slider, function(val)
+    local detail_scale_slider = create_slider("DTL XZ:", xs[3], ys[4], sprites.med_slider, function(val)
         local s = (val ^ 2) * 0.1 + 0.0005
         terrain_state.settings.floor_detail_scale = s
         terrain_state.settings.ceiling_detail_scale = s
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, 0)
-    local ceiling_y_slider = create_slider("SKY Y:", 820, ys[5], sprites.med_slider, function(val)
+    local ceiling_y_slider = create_slider("SKY Y:", xs[3], ys[5], sprites.med_slider, function(val)
         terrain_state.settings.ceiling_y_offset = (val ^ 2 * 1000) - 100
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, 0)
-    local y_scale_slider = create_slider("VSCALE:", 820, ys[6], sprites.med_slider, function(val)
+    local y_scale_slider = create_slider("VSCALE:", xs[3], ys[6], sprites.med_slider, function(val)
         local s = (val ^ 2) * 500 + 50
         terrain_state.settings.floor_y_scale = s
         terrain_state.settings.ceiling_y_scale = s
@@ -538,7 +576,7 @@ function create_controls(editor_state, terrain_state)
         editor_state.modified = true
     end, 0)
 
-    local reset_button = create_button("RESET", 1040, ys[7], function()
+    local reset_button = create_button("RESET", xs[2] + 560, ys[7], function()
         if am.platform ~= "html" or not editor_state.modified
             or am.eval_js("confirm('You have unsaved changes, are you sure you want to reset? (all unsaved changes will be lost)');")
         then
@@ -546,7 +584,7 @@ function create_controls(editor_state, terrain_state)
         end
     end)
 
-    local upload_button = create_button("UPLOAD", 390, ys[2] - 2, function()
+    local upload_button = create_button("UPLOAD", xs[1] + 490, ys[1], function()
         win.lock_pointer = false
         local img = upload.start_image_upload()
         win.scene:action(function()
@@ -588,7 +626,7 @@ function create_controls(editor_state, terrain_state)
         end)
     end)
 
-    local download_button = create_button("DOWNLD", 390, ys[3] - 2, function()
+    local download_button = create_button("DOWNLD", xs[1] + 490, ys[2], function()
         local view = editor_state.views[editor_state.curr_view]
         view.fb:read_back()
         local dst = am.image_buffer(512)
@@ -624,7 +662,7 @@ function create_controls(editor_state, terrain_state)
         download.download_image(dst)
     end)
 
-    local title_button = create_button("TITLE", 720, ys[7], function()
+    local title_button = create_button("TITLE", xs[2] + 720-480, ys[7], function()
         local title = terrain_state.settings.title or ""
         title = title:gsub("%'", "")
         title = am.eval_js("prompt('Enter a title:', '"..title.."');")
@@ -639,7 +677,7 @@ function create_controls(editor_state, terrain_state)
         end
         editor_state.modified = true
     end)
-    local share_button = create_button("SHARE", 800, ys[7], function()
+    local share_button = create_button("SHARE", xs[2] + 800-480, ys[7], function()
         gist.share(
             editor_state.views.floor,
             editor_state.views.ceiling,
@@ -649,7 +687,7 @@ function create_controls(editor_state, terrain_state)
             terrain_state
         )
     end)
-    local save_button = create_button("SAVE", 880, ys[7], function()
+    local save_button = create_button("SAVE", xs[2] + 880-480, ys[7], function()
         save.save(
             editor_state.views.floor,
             editor_state.views.ceiling,
@@ -660,7 +698,7 @@ function create_controls(editor_state, terrain_state)
         )
         editor_state.modified = false
     end)
-    local help_button = create_button("HELP", 960, ys[7], function()
+    local help_button = create_button("HELP", xs[2] + 960-480, ys[7], function()
         help.show()
     end)
 
@@ -757,12 +795,13 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, hands, terr
             MV = mat4(1),
             exp1 = 1,
             exp2 = 1,
+            height_src = vec4(0, 0, 0, 1)
         }
         ^ am.translate(0, 0)
         ^ am.rotate(brush_angle):tag"brush_rotate"
         ^ am.scale(brush_size):tag"brush_size"
         ^ {
-            am.sprite(sprites["brush"..editor_state.curr_brush]):tag"brush_sprite"
+            am.sprite(brush_sprite_specs[editor_state.curr_brush]):tag"brush_sprite"
         }
     draw_brush"brush_sprite""blend".mode = "premult"
     draw_brush"brush_sprite""use_program".program = draw_shader
@@ -812,6 +851,7 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, hands, terr
             P = mat4(1),
             MV = mat4(1),
             tex = tmp_texture,
+            height_src = vec4(0, 0, 0, 1),
         }
         ^ am.scale(1):tag"bg"
         ^ am.translate(0, 0)
@@ -848,6 +888,7 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, hands, terr
     local start_alpha = nil
 
     node:action(function()
+        webcam_tex:capture_video()
         tmp_fb:render(tmp_scene)
         local pos = mouse.pixel_position
         prev_norm_pos = norm_pos
@@ -934,7 +975,7 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, hands, terr
             draw_brush"brush_rotate".angle = brush_angle
         end
         if win:key_pressed"c" and not mouse.cursor.hidden and in_bounds(pos, editor_bounds) then
-            local sprite = sprites["brush"..editor_state.curr_brush]
+            local sprite = brush_sprite_specs[editor_state.curr_brush]
             local x1 = sprite.s1 * 2 - 1
             local y1 = sprite.t1 * 2 - 1
             local x2 = sprite.s2 * 2 - 1

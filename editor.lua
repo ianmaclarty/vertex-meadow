@@ -538,7 +538,7 @@ function create_controls(editor_state, terrain_state)
         editor_state.modified = true
     end, 0)
 
-    local reset_button = create_button("RESET", 880, ys[7], function()
+    local reset_button = create_button("RESET", 1040, ys[7], function()
         if am.platform ~= "html" or not editor_state.modified
             or am.eval_js("confirm('You have unsaved changes, are you sure you want to reset? (all unsaved changes will be lost)');")
         then
@@ -588,7 +588,7 @@ function create_controls(editor_state, terrain_state)
         end)
     end)
 
-    local download_button = create_button("DOWNLOAD", 390, ys[3] - 2, function()
+    local download_button = create_button("DOWNLD", 390, ys[3] - 2, function()
         local view = editor_state.views[editor_state.curr_view]
         view.fb:read_back()
         local dst = am.image_buffer(512)

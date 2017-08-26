@@ -125,7 +125,7 @@ local draw_fshader = [[
     varying vec2 v_uv;
     void main() {
         vec4 s = texture2D(tex, v_uv);
-        if (s.a < 1.0/255.0) discard;
+        //if (s.a < 1.0/255.0) discard;
         vec4 v = s * height_src;
         float alpha = v.r + v.g + v.b + v.a;
         alpha = pow(1.0 - pow(1.0 - alpha, exp1), exp2) * color.a;
@@ -451,7 +451,9 @@ function create_controls(editor_state, terrain_state)
     end)
     local brush_nodes = {}
     for i = 1, num_brushes do
-        table.insert(brush_nodes, am.scale(28/256) ^ am.sprite(brush_sprite_specs[i]))
+        local sprite = am.sprite(brush_sprite_specs[i])
+        sprite"blend".mode = "off"
+        table.insert(brush_nodes, am.scale(28/256) ^ sprite)
     end
     local brush_select = create_select("BRUSH:", brush_nodes, xs[1], ys[2], 30, function(b)
         editor_state.curr_brush = b

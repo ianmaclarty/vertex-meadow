@@ -616,13 +616,31 @@ function create_controls(editor_state, terrain_state)
                 local ok = pcall(function() 
                     img = am.decode_png(am.base64_decode(base64))
                 end)
-                if not ok or img.width ~= 512 or img.height ~= 512 then
-                    am.eval_js("alert('image must be a 512x512 png');");
+                if not ok then
+                    am.eval_js("alert('image not a valid png');");
                     return true
+                end
+                if img.width ~= 512 or img.height ~= 512 then
+                    -- resize to 512x512
+                    local buf = am.image_buffer(512)
+                    local texture = am.texture2d(buf)
+                    local fb = am.framebuffer(texture)
+                    local tex2 = am.texture2d(img)
+                    tex2.filter = "linear"
+                    local quads = am.quads(1, {"vert", "vec2", "uv", "vec2"})
+                    quads:add_quad{
+                        vert = {-1, 1, -1, -1, 1, -1, 1, 1},
+                        uv = {0, 1, 0, 0, 1, 0, 1, 1},
+                    }
+                    fb:render(am.use_program(am.shaders.texture2d)
+                        ^ am.bind{P = mat4(1), MV = mat4(1), tex = tex2}
+                        ^ quads)
+                    fb:read_back()
+                    img = buf
                 end
                 local view = editor_state.views[editor_state.curr_view]
                 view.fb:read_back()
-                if editor_state.is_color_view then
+                if editor_state.all_channels or editor_state.is_color_view then
                     local dr = view.img.buffer:view("ubyte", 0, 4)
                     local sr = img.buffer:view("ubyte", 0, 4)
                     local dg = view.img.buffer:view("ubyte", 1, 4)
@@ -637,7 +655,8 @@ function create_controls(editor_state, terrain_state)
                         local sa = img.buffer:view("ubyte", 3, 4)
                         da:set(sa)
                     end
-                elseif editor_state.is_alpha_view then
+                end
+                if editor_state.all_channels or editor_state.is_alpha_view then
                     local dst = view.img.buffer:view("ubyte", 3, 4)
                     local src = img.buffer:view("ubyte", 0, 4)
                     dst:set(src)

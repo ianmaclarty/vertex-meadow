@@ -86,7 +86,7 @@ function start_engine(floor, floor_detail, ceiling, ceiling_detail, hands, setti
 
     top:action(function()
         mouse.cursor:update()
-        if win:key_pressed("escape") then
+        if am.platform ~= "html" and win:key_pressed("escape") then
             win:close()
             return true
         elseif am.platform ~= "html" and (win:key_pressed("lalt") or win:key_pressed("ralt")) then

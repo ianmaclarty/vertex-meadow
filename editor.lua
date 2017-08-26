@@ -99,7 +99,7 @@ local hands_fshader = [[
 local heightmap_shader = am.program(heightmap_vshader, heightmap_fshader)
 local color_shader = am.program(heightmap_vshader, color_fshader)
 local hands_shader = am.program(heightmap_vshader, hands_fshader)
-local capture_shader = am.shaders.texture2d;
+local capture_shader = am.shaders.texture2d
 
 local draw_vshader = [[
     precision highp float;

@@ -80,7 +80,7 @@ function do_share(old_scene, old_bg, floor, ceiling, floor_detail, ceiling_detai
             focus.regain("Share failed")
             return true
         end
-        if win:key_pressed"escape" then
+        if am.platform ~= "html" and win:key_pressed"escape" then
             win:close()
         end
     end)
@@ -198,7 +198,7 @@ function gist.load_gist(id, start)
             am.eval_js("alert('Sorry, but an error occured while loading this level (error code: "..http.code.."').');")
             return true
         end
-        if win:key_pressed"escape" then
+        if am.platform ~= "html" and win:key_pressed"escape" then
             win:close()
         end
     end)

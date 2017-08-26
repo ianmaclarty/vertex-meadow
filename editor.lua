@@ -118,17 +118,18 @@ local draw_fshader = [[
     precision mediump float;
     uniform sampler2D tex;
     uniform vec4 color;
+    uniform float mult_alpha;
     uniform float exp1;
     uniform float exp2;
     uniform vec4 height_src;
     varying vec2 v_uv;
     void main() {
         vec4 s = texture2D(tex, v_uv);
+        if (s.a < 1.0/255.0) discard;
         vec4 v = s * height_src;
         float alpha = v.r + v.g + v.b + v.a;
-        if (alpha < 1.0/255.0) discard;
         alpha = pow(1.0 - pow(1.0 - alpha, exp1), exp2) * color.a;
-        gl_FragColor = vec4(s.rgb * color.rgb * color.a, alpha);
+        gl_FragColor = vec4(s.rgb * color.rgb * mix(1.0, color.a, mult_alpha), alpha);
     }
 ]]
 
@@ -346,12 +347,47 @@ local xs = {0, 580, 920}
 local
 function update_height_src(editor_state)
     local height_src
-    if editor_state.curr_brush == webcam_brush and editor_state.is_alpha_view then
+    if editor_state.curr_brush == webcam_brush and (editor_state.is_alpha_view or editor_state.all_channels) then
         height_src = vec4(0.33, 0.33, 0.33, 0)
     else
         height_src = vec4(0, 0, 0, 1)
     end
     editor_state.draw_brush"bind".height_src = height_src
+end
+
+local
+function update_draw_blend(editor_state)
+    local real_mode = editor_state.blend_mode
+    if not editor_state.all_channels and editor_state.blend_mode ~= "off" then
+        editor_state.draw_brush"bind".mult_alpha = 1
+    else
+        editor_state.draw_brush"bind".mult_alpha = 0
+        if real_mode == "premult" then
+            real_mode = "off"
+        end
+    end
+    editor_state.draw_brush"brush_sprite""blend".mode = real_mode
+end
+
+local
+function update_draw_mask(editor_state)
+    local mask = editor_state.draw_brush"color_mask"
+    if editor_state.all_channels or (editor_state.is_color_view and editor_state.is_alpha_view) then
+        mask.red = true
+        mask.green = true
+        mask.blue = true
+        mask.alpha = true
+    elseif editor_state.is_alpha_view then
+        mask.red = false
+        mask.green = false
+        mask.blue = false
+        mask.alpha = true
+    else
+        mask.red = true
+        mask.green = true
+        mask.blue = true
+        mask.alpha = false
+    end
 end
 
 local
@@ -388,36 +424,31 @@ function create_controls(editor_state, terrain_state)
         terrain_state.settings[editor_state.curr_texture] = editor_state.tmp_texture
         terrain_state:update_settings(terrain_state.settings)
         editor_state.tmp_scene"bind".tex = editor_state.views[editor_state.curr_view].tex
-        local mask = editor_state.draw_brush"color_mask"
         if val == 9 then
             -- hands
             editor_state.editor_node"use_program".program = hands_shader
-            mask.red = true
-            mask.green = true
-            mask.blue = true
-            mask.alpha = true
             capture_shader = am.shaders.texture2d
             editor_state.is_color_view = true
             editor_state.is_alpha_view = true
         elseif val % 2 == 1 then
             editor_state.editor_node"use_program".program = heightmap_shader
-            mask.red = false
-            mask.green = false
-            mask.blue = false
-            mask.alpha = true
             editor_state.is_color_view = false
             editor_state.is_alpha_view = true
         else
             editor_state.editor_node"use_program".program = color_shader
-            mask.red = true
-            mask.green = true
-            mask.blue = true
-            mask.alpha = false
             editor_state.is_color_view = true
             editor_state.is_alpha_view = false
         end
         update_height_src(editor_state)
+        update_draw_mask(editor_state)
+        update_draw_blend(editor_state)
     end, 1, {"1", "2", "3", "4", "5", "6", "7", "8"})
+    local channels_checkbox = create_checkbox("RGBA:", xs[1] + 390, ys[1], function(val)
+        editor_state.all_channels = val
+        update_height_src(editor_state)
+        update_draw_mask(editor_state)
+        update_draw_blend(editor_state)
+    end)
     local brush_nodes = {}
     for i = 1, num_brushes do
         table.insert(brush_nodes, am.scale(28/256) ^ am.sprite(brush_sprite_specs[i]))
@@ -448,8 +479,9 @@ function create_controls(editor_state, terrain_state)
         am.sprite(sprites.blend_mul),
     }
     local blend_select = create_select("BLEND:", blend_nodes, xs[1], ys[6], 30, function(val)
-        editor_state.draw_brush"brush_sprite""blend".mode = blend_modes[val]
-    end, 3)
+        editor_state.blend_mode = blend_modes[val]
+        update_draw_blend(editor_state)
+    end, table.search(blend_modes, editor_state.blend_mode))
     local flow_slider = create_slider("FLOW:", xs[1], ys[7], sprites.flow_slider, function(val)
         if val < 0.1 then
             editor_state.flow = 0
@@ -573,7 +605,7 @@ function create_controls(editor_state, terrain_state)
         end
     end)
 
-    local upload_button = create_button("UPLOAD", xs[1] + 490, ys[1], function()
+    local upload_button = create_button("UPLOAD", xs[1] + 490, ys[3], function()
         win.lock_pointer = false
         local img = upload.start_image_upload()
         win.scene:action(function()
@@ -615,7 +647,7 @@ function create_controls(editor_state, terrain_state)
         end)
     end)
 
-    local download_button = create_button("DOWNLD", xs[1] + 490, ys[2], function()
+    local download_button = create_button("DOWNLD", xs[1] + 490, ys[4], function()
         local view = editor_state.views[editor_state.curr_view]
         view.fb:read_back()
         local dst = am.image_buffer(512)
@@ -696,6 +728,7 @@ function create_controls(editor_state, terrain_state)
         am.bind{P = mat4(1), MV = mat4(1)}
         ^ am.rect(-1, -1, 1, 1, vec4(0.2, 0.2, 0.2, 1)))
     group:append(view_select)
+    group:append(channels_checkbox)
     group:append(brush_select)
     group:append(exp1_slider)
     group:append(exp2_slider)
@@ -784,7 +817,8 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, hands, terr
             MV = mat4(1),
             exp1 = 1,
             exp2 = 1,
-            height_src = vec4(0, 0, 0, 1)
+            height_src = vec4(0, 0, 0, 1),
+            mult_alpha = 0,
         }
         ^ am.translate(0, 0)
         ^ am.rotate(brush_angle):tag"brush_rotate"
@@ -792,7 +826,8 @@ function editor.create(floor, ceiling, floor_detail, ceiling_detail, hands, terr
         ^ {
             am.sprite(brush_sprite_specs[editor_state.curr_brush]):tag"brush_sprite"
         }
-    draw_brush"brush_sprite""blend".mode = "premult"
+    editor_state.blend_mode = "premult"
+    draw_brush"brush_sprite""blend".mode = editor_state.blend_mode
     draw_brush"brush_sprite""use_program".program = draw_shader
     editor_state.draw_brush = draw_brush
     local tmp_texture = am.texture2d(floor.tex.width, floor.tex.height)

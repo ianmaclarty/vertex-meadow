@@ -551,6 +551,11 @@ function create_controls(editor_state, terrain_state)
         terrain_state:update_settings(terrain_state.settings)
         editor_state.modified = true
     end, terrain_state.settings.noclip)
+    local grav_checkbox = create_checkbox("GRAV:", xs[1] + 410, ys[7], function(val)
+        terrain_state.settings.nograv = not val
+        terrain_state:update_settings(terrain_state.settings)
+        editor_state.modified = true
+    end, not terrain_state.settings.nograv)
 
     local mesh_nodes = {
         am.sprite(sprites.mesh_low),
@@ -767,6 +772,7 @@ function create_controls(editor_state, terrain_state)
 
     group:append(wireframe_checkbox)
     group:append(noclip_checkbox)
+    group:append(grav_checkbox)
     group:append(mesh_select)
 
     group:append(detail_height_slider)

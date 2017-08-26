@@ -344,8 +344,14 @@ function terrain.create(in_settings)
         local new_pos = pos
         if win:key_down("w") or win:key_down("up") --[[or win:mouse_down"left"]] then
             new_pos = new_pos + forward * walk_speed * am.delta_time
+            if state.nograv then
+                y_pos = y_pos + s(pitch) * walk_speed * am.delta_time
+            end
         elseif win:key_down("s") or win:key_down("down") then
             new_pos = new_pos - forward * walk_speed * am.delta_time
+            if state.nograv then
+                y_pos = y_pos - s(pitch) * walk_speed * am.delta_time
+            end
         end
         if win:key_down("a") or win:key_down("left") then
             new_pos = new_pos + left * strafe_speed * am.delta_time
@@ -356,18 +362,21 @@ function terrain.create(in_settings)
         readback_framebuffer:render(readback_node)
         readback_framebuffer:read_back()
 
-        local floor_pos = new_pos + lookahead * forward
-        --local lookup_pos = vec2(-floor_pos.y, -floor_pos.x) * floor_heightmap_scale
-        local lookup_pos = vec2(floor_pos.x, floor_pos.y) * floor_heightmap_scale
-        uv_readback_node.uv = lookup_pos
-        readback_framebuffer:render(readback_node)
-        readback_framebuffer:read_back()
-        local readback_floor_height = readback_view[1]/255+readback_view[2]/65535
-        local new_floor_y = (readback_floor_height*floor_y_scale + floor_y_offset) + shoulder_height
-        local readback_ceiling_height = readback_view[3]/255+readback_view[4]/65535
-        local new_ceiling_y = (readback_ceiling_height*ceiling_y_scale + ceiling_y_offset) - head_height
+        local new_floor_y, new_ceiling_y
+        if not state.nograv then
+            local floor_pos = new_pos + lookahead * forward
+            --local lookup_pos = vec2(-floor_pos.y, -floor_pos.x) * floor_heightmap_scale
+            local lookup_pos = vec2(floor_pos.x, floor_pos.y) * floor_heightmap_scale
+            uv_readback_node.uv = lookup_pos
+            readback_framebuffer:render(readback_node)
+            readback_framebuffer:read_back()
+            local readback_floor_height = readback_view[1]/255+readback_view[2]/65535
+            new_floor_y = (readback_floor_height*floor_y_scale + floor_y_offset) + shoulder_height
+            local readback_ceiling_height = readback_view[3]/255+readback_view[4]/65535
+            new_ceiling_y = (readback_ceiling_height*ceiling_y_scale + ceiling_y_offset) - head_height
+        end
 
-        if settings_updated or state.noclip or new_floor_y - y_pos < barrier_height and new_ceiling_y - new_floor_y > 0 then
+        if settings_updated or state.noclip or state.nograv or new_floor_y - y_pos < barrier_height and new_ceiling_y - new_floor_y > 0 then
             pos = new_pos
             floor_y = new_floor_y
             ceiling_y = new_ceiling_y
@@ -389,14 +398,16 @@ function terrain.create(in_settings)
             on_ground = false
         end
         y_speed = y_speed + gravity * am.delta_time
-        y_pos = y_pos + y_speed * am.delta_time
-        if y_pos < floor_y then
-            y_pos = floor_y
-            y_speed = 0
-            on_ground = true
-        elseif not state.noclip and y_pos > ceiling_y then
-            y_pos = ceiling_y
-            y_speed = 0
+        if not state.nograv then
+            y_pos = y_pos + y_speed * am.delta_time
+            if y_pos < floor_y then
+                y_pos = floor_y
+                y_speed = 0
+                on_ground = true
+            elseif not state.noclip and y_pos > ceiling_y then
+                y_pos = ceiling_y
+                y_speed = 0
+            end
         end
         scene"ypos".position = vec3(0, -y_pos, 0)
 
@@ -459,6 +470,7 @@ function terrain.create(in_settings)
         settings.walk_speed = settings.walk_speed or 60
         settings.wireframe = settings.wireframe or false
         settings.noclip = settings.noclip or false
+        settings.nograv = settings.nograv or false
 
         floor_texture = settings.floor_texture
         floor_detail = settings.floor_detail_texture
@@ -566,6 +578,7 @@ function terrain.create(in_settings)
         strafe_speed = walk_speed
 
         state.noclip = settings.noclip
+        state.nograv = settings.nograv
 
         settings_updated = true
     end

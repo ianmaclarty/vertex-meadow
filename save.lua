@@ -46,6 +46,7 @@ function do_save(old_scene, old_bg, floor, ceiling, floor_detail, ceiling_detail
         title = terrain_state.settings.title,
         wireframe = terrain_state.settings.wireframe,
         noclip = terrain_state.settings.noclip,
+        nograv = terrain_state.settings.nograv,
         links = links,
     }
     local data = {

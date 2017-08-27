@@ -11,7 +11,7 @@ local focus = require "focus"
 
 function start_engine(floor, floor_detail, ceiling, ceiling_detail, hands, settings, edit_mode)
     if edit_mode == nil then
-        edit_mode = true
+        edit_mode = false
     end
     if not settings.links then
         settings.links = {}

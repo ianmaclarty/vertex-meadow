@@ -108,7 +108,7 @@ function save.load_save(start, filename)
             data = am.parse_json(f:read("*a"))
             f:close()
         else
-            return
+            error(filename.." not found")
         end
     end
     local

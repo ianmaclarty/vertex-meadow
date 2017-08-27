@@ -1,6 +1,6 @@
 return am.window{
     title = "Vertex Meadow",
-    width = 1180,
+    width = 1200,
     height = 740,
     mode = "windowed",
     depth_buffer = true,

@@ -124,22 +124,24 @@ function start_engine(floor, floor_detail, ceiling, ceiling_detail, hands, setti
             end
         end
         --[[
-        if win:key_pressed"f1" then
-            save.load_save(start_engine, "demo1.json")
-        elseif win:key_pressed"f2" then
-            save.load_save(start_engine, "demo2.json")
-        elseif win:key_pressed"f3" then
-            save.load_save(start_engine, "demo3.json")
-        elseif win:key_pressed"f4" then
-            save.load_save(start_engine, "demo4.json")
-        elseif win:key_pressed"f5" then
-            save.load_save(start_engine, "demo5.json")
-        elseif win:key_pressed"f6" then
-            save.load_save(start_engine, "demo6.json")
-        elseif win:key_pressed"f7" then
-            save.load_save(start_engine, "demo7.json")
-        elseif win:key_pressed"f8" then
-            save.load_save(start_engine, "demo8.json")
+        if am.platform ~= "html" then
+            if win:key_pressed"f1" then
+                save.load_save(start_engine, "demo1.json")
+            elseif win:key_pressed"f2" then
+                save.load_save(start_engine, "demo2.json")
+            elseif win:key_pressed"f3" then
+                save.load_save(start_engine, "demo3.json")
+            elseif win:key_pressed"f4" then
+                save.load_save(start_engine, "demo4.json")
+            elseif win:key_pressed"f5" then
+                save.load_save(start_engine, "demo5.json")
+            elseif win:key_pressed"f6" then
+                save.load_save(start_engine, "demo6.json")
+            elseif win:key_pressed"f7" then
+                save.load_save(start_engine, "demo7.json")
+            elseif win:key_pressed"f8" then
+                save.load_save(start_engine, "demo8.json")
+            end
         end
         ]]
         update_layout()

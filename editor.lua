@@ -788,8 +788,8 @@ function create_controls(editor_state, terrain_state)
         group:append(download_button)
         group:append(title_button)
         group:append(share_button)
-        group:append(save_button)
     end
+    group:append(save_button)
     group:append(help_button)
 
     local node = 

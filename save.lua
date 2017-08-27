@@ -60,7 +60,7 @@ function do_save(old_scene, old_bg, floor, ceiling, floor_detail, ceiling_detail
     if am.platform == "html" then
         am.eval_js("localStorage.setItem('vertex_meadow_save', JSON.stringify("..am.to_json(data).."));");
     else
-        local f = io.open("save.json", "w")
+        local f = io.open(am.app_data_dir.."/save.json", "w")
         f:write(am.to_json(data))
         f:close()
     end
@@ -81,7 +81,17 @@ function save.save(floor, ceiling, floor_detail, ceiling_detail, hands, terrain_
 end
 
 function save.is_save()
-    return am.eval_js("localStorage.getItem('vertex_meadow_save') ? true : false;");
+    if am.platform == "html" then
+        return am.eval_js("localStorage.getItem('vertex_meadow_save') ? true : false;");
+    else
+        local f = io.open(am.app_data_dir.."/save.json", "r")
+        if f then
+            f:close()
+            return true
+        else
+            return false
+        end
+    end
 end
 
 function save.load_save(start, filename)
@@ -93,9 +103,13 @@ function save.load_save(start, filename)
         data = am.eval_js("JSON.parse(localStorage.getItem('vertex_meadow_save'))");
     else
         filename = filename or "save.json"
-        local f = io.open(filename, "r")
-        data = am.parse_json(f:read("*a"))
-        f:close()
+        local f = io.open(am.app_data_dir.."/"..filename, "r")
+        if f then
+            data = am.parse_json(f:read("*a"))
+            f:close()
+        else
+            return
+        end
     end
     local
     function extract_img(name)

@@ -62,7 +62,7 @@ function upload.start_image_upload()
         '<h1>Image upload</h1>'+
         '<p>Click the "Choose file" button below to upload '+
         'an image.</p>'+
-        '<p>The image must be a 512x512 png.</p>'+
+        '<p>The image must be in png format.</p>'+
         '<p>When uploading a height image, the red channel is '+
         'used for height.</p>'+
         '<input id="file-upload" type="file">'+

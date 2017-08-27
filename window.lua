@@ -6,5 +6,5 @@ return am.window{
     depth_buffer = true,
     letterbox = false,
     clear_color = vec4(0.6, 0.05, 0.01, 1),
-    lock_pointer = true,
+    --lock_pointer = true,
 }

@@ -27,6 +27,7 @@ end)
 
 function mouse.set_visible(visible)
     mouse.cursor.hidden = not visible
+    win.lock_pointer = not visible
 end
 
 function mouse.set_position(pos)

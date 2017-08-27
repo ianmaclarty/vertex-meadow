@@ -189,7 +189,7 @@ function gist.load_gist(id, start)
                     settings.floor_detail_texture = floor_detail.tex
                     settings.ceiling_detail_texture = ceiling_detail.tex
                     settings.hands_texture = hands.tex
-                    start(floor, floor_detail, ceiling, ceiling_detail, hands, settings)
+                    start(floor, floor_detail, ceiling, ceiling_detail, hands, settings, false)
                     return true
                 end
             end)

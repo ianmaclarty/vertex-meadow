@@ -9,7 +9,10 @@ local help = require "help"
 local title = require "title"
 local focus = require "focus"
 
-function start_engine(floor, floor_detail, ceiling, ceiling_detail, hands, settings)
+function start_engine(floor, floor_detail, ceiling, ceiling_detail, hands, settings, edit_mode)
+    if edit_mode == nil then
+        edit_mode = true
+    end
     if not settings.links then
         settings.links = {}
     end
@@ -31,7 +34,6 @@ function start_engine(floor, floor_detail, ceiling, ceiling_detail, hands, setti
 
     local bot = 230
 
-    local edit_mode = false
     mouse.set_visible(edit_mode)
     ed:set_mode(edit_mode)
 

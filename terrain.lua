@@ -324,7 +324,7 @@ function terrain.create(in_settings)
     }
 
     local settings_updated = true
-    local start_pos_changed = false
+    local start_pos_changed = true
 
     scene:action(function()
         if state.paused and not start_pos_changed then

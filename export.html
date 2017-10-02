@@ -49,8 +49,16 @@
     </p>
 
     <p>
-    Note also that this export method requires the files be accessed from a web server. They won't
-    work if you just open index.html from your local file system.
+    Note also that this export method requires the files be accessed from a web server. They won't 
+    work if you just open index.html from your local file system. To generate native builds, 
+    first download the latest release of <a href="amulet.xyz">amulet</a> for your OS. Once you've 
+    installed amulet, rename the data.pak file to data.zip and unzip it. You should end up with 
+    some .lua and .png files. Open a terminal (command prompt in Windows) and change to the 
+    directory containing those files (e.g. on Windows type something like 
+    "cd C:\Users\Ian\VertexMeadowData"). Then type "amulet export". This will generate native 
+    builds for all supported platforms as distributable zip files. Before doing this, you may 
+    want to change the project name and author information located in conf.lua. More information 
+    can be found in the <a href="http://www.amulet.xyz/doc/#exporting">amulet documentation.</a>
     </p>
 
     <p>

@@ -11,7 +11,7 @@
 <h1>Vertex Meadow</h1>
 
 <p>
-<a href="https://ianmaclarty.itch.io/vertex-meadow" target="_blank"><b>MAKE A WORLD</b></a> (Chrome or Firefox recommended)
+<a href="player.html" target="_blank"><b>MAKE A WORLD</b></a> (Firefox or Chrome recommended)
 </p>
 
 <h2>About</h2>
@@ -24,8 +24,8 @@ With it you can create detailed and unusual 3D environments to explore
 using a 2D paint-program-like interface and your webcam.
 </p>
 <p>
-The tool runs in a browser using webgl and you can share your creations
-via URL.
+The tool runs in a browser using webgl and you can export your creations
+and upload them to third party hosting services such as itch.io or gamejolt.
 </p>
 <p>
 You can also chain together multiple levels by creating triggers
@@ -221,13 +221,15 @@ in your level that cause the player's browser to jump to a URL of your choice.
 </li>
 <li>Set the flow to zero if you want to stamp once with each click</li>
 <li>You can create custom brushes by pressing C. This will replace the current brush with whatever is under the cursor.</li>
-<li>Click "share" to generate a unique URL for your creation that you can share with others</li>
 </ul>
 
 <h2>Exporting</h2>
 
 <p>
-You can export a standalone version of your level using <a href="export.html">this tool</a>.
+Toggle edit mode (E) and then click EXPORT. After a short wait a zip file should download.
+You can then upload this zip to a hosting site such as itch.io or your own webserver.
+Note that the export needs to be accessed from a webserver to work. Opening the index.html
+file locally will not work in all browsers due to security restrictions.
 </p>
 
 <h2>Source code</h2>

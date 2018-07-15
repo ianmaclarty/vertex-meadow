@@ -3,7 +3,7 @@ local editor = ...
 local win = require "window"
 local sprites = require "sprites"
 local mouse = require "mouse"
-local gist = require "gist"
+local export = require "export"
 local save = require "save"
 local help = require "help"
 local focus = require "focus"
@@ -724,8 +724,8 @@ function create_controls(editor_state, terrain_state)
         end
         editor_state.modified = true
     end)
-    local share_button = create_button("SHARE", xs[2] + 800-480, ys[7], function()
-        gist.share(
+    local share_button = create_button("EXPORT", xs[2] + 800-480, ys[7], function()
+        export.export(
             editor_state.views.floor,
             editor_state.views.ceiling,
             editor_state.views.floor_detail,

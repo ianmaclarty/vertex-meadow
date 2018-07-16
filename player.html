@@ -156,6 +156,7 @@ function vm_export(files) {
             files["hands.png"] &&
             files["settings.lua"] &&
             files["amulet.js"] &&
+            files["amulet.wasm"] &&
             files["player.html"] &&
             files["jquery-2.1.3.min.js"] &&
             files["jszip.min.js"] &&
@@ -197,6 +198,7 @@ function vm_export(files) {
         var download_zip = new JSZip();
         download_zip.file("data.pak", data_base64, {base64: true});
         download_zip.file("amulet.js", files["amulet.js"]);
+        download_zip.file("amulet.wasm", files["amulet.wasm"]);
         download_zip.file("index.html", files["player.html"]);
         download_zip.file("player.html", files["player.html"]);
         download_zip.file("jquery-2.1.3.min.js", files["jquery-2.1.3.min.js"]);
@@ -208,6 +210,7 @@ function vm_export(files) {
         console.log("saved");
     }
     load_text_file("amulet.js", files, create_export);
+    load_bin_file("amulet.wasm", files, create_export);
     load_text_file("player.html", files, create_export);
     load_text_file("jquery-2.1.3.min.js", files, create_export);
     load_text_file("jszip.min.js", files, create_export);

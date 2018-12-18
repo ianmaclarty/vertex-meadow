@@ -161,11 +161,11 @@ function create_mesh(width, depth, near_clip, far_clip, fov)
             verts[k+1] = z
             if j < depth and i < w2 then
                 indices[h+0] = l
-                indices[h+1] = l + width + 1
-                indices[h+2] = l + 1
+                indices[h+1] = l + 1
+                indices[h+2] = l + width + 1
                 indices[h+3] = l + 1
-                indices[h+4] = l + width + 1
-                indices[h+5] = l + width + 2
+                indices[h+4] = l + width + 2
+                indices[h+5] = l + width + 1
                 h = h + 6
             end
             k = k + 2
@@ -221,7 +221,7 @@ function terrain.create(in_settings)
     local mesh_node = create_mesh(width, depth, near_clip, far_clip)
 
     local floor_node =
-        am.cull_face("cw")
+        am.cull_face("back")
         ^ am.bind{
             light_dir = vec3(0),
             detail_scale = floor_detail_scale,
@@ -237,7 +237,7 @@ function terrain.create(in_settings)
         ^ mesh_node
 
     local ceiling_node = 
-        am.cull_face("ccw")
+        am.cull_face("front")
         ^ am.bind{
             light_dir = vec3(0),
             detail_scale = ceiling_detail_scale,

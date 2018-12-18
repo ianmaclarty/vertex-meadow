@@ -221,7 +221,7 @@ function terrain.create(in_settings)
     local mesh_node = create_mesh(width, depth, near_clip, far_clip)
 
     local floor_node =
-        am.cull_face("cw")
+        am.cull_face("front")
         ^ am.bind{
             light_dir = vec3(0),
             detail_scale = floor_detail_scale,
@@ -237,7 +237,7 @@ function terrain.create(in_settings)
         ^ mesh_node
 
     local ceiling_node = 
-        am.cull_face("ccw")
+        am.cull_face("back")
         ^ am.bind{
             light_dir = vec3(0),
             detail_scale = ceiling_detail_scale,
